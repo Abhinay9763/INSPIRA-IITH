@@ -1,27 +1,24 @@
-"""Featherless API client setup using OpenAI SDK"""
+"""Groq API client setup using Groq SDK"""
 
-from openai import OpenAI
+from groq import Groq
 from typing import Optional
 import logging
-from ..config import FEATHERLESS_API_KEY, FEATHERLESS_BASE_URL, validate_config
+from ..config import GROQ_API_KEY, validate_config
 
 logger = logging.getLogger(__name__)
 
-class FeatherlessClient:
-    """Wrapper for OpenAI client configured to use Featherless API"""
+class GroqClient:
+    """Wrapper for Groq client"""
 
     def __init__(self):
-        """Initialize the Featherless client"""
+        """Initialize the Groq client"""
         validate_config()
-        self._client = OpenAI(
-            base_url=FEATHERLESS_BASE_URL,
-            api_key=FEATHERLESS_API_KEY
-        )
-        logger.info("Featherless client initialized successfully")
+        self._client = Groq(api_key=GROQ_API_KEY)
+        logger.info("Groq client initialized successfully")
 
     @property
-    def client(self) -> OpenAI:
-        """Get the OpenAI client instance"""
+    def client(self) -> Groq:
+        """Get the Groq client instance"""
         return self._client
 
     async def chat_completion(
@@ -33,10 +30,10 @@ class FeatherlessClient:
         **kwargs
     ):
         """
-        Create a chat completion using the Featherless API
+        Create a chat completion using the Groq API
 
         Args:
-            model: The model to use (e.g., "meta-llama/Llama-3.3-70B-Instruct")
+            model: The model to use (e.g., "llama-3.1-70b-versatile")
             messages: List of message dictionaries
             temperature: Sampling temperature
             max_tokens: Maximum tokens to generate
@@ -60,26 +57,26 @@ class FeatherlessClient:
             raise
 
     def test_connection(self) -> bool:
-        """Test the connection to Featherless API"""
+        """Test the connection to Groq API"""
         try:
             # Make a simple test call
             response = self._client.chat.completions.create(
-                model="meta-llama/Llama-3.3-70B-Instruct",
+                model="llama-3.1-8b-instant",
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5
             )
-            logger.info("Featherless API connection test successful")
+            logger.info("Groq API connection test successful")
             return True
         except Exception as e:
-            logger.error(f"Featherless API connection test failed: {str(e)}")
+            logger.error(f"Groq API connection test failed: {str(e)}")
             return False
 
 # Global client instance
-_featherless_client: Optional[FeatherlessClient] = None
+_groq_client: Optional[GroqClient] = None
 
-def get_featherless_client() -> FeatherlessClient:
-    """Get or create the global Featherless client instance"""
-    global _featherless_client
-    if _featherless_client is None:
-        _featherless_client = FeatherlessClient()
-    return _featherless_client
+def get_groq_client() -> GroqClient:
+    """Get or create the global Groq client instance"""
+    global _groq_client
+    if _groq_client is None:
+        _groq_client = GroqClient()
+    return _groq_client

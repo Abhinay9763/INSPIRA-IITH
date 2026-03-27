@@ -10,14 +10,13 @@ from pathlib import Path
 env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
-# Featherless API Configuration
-FEATHERLESS_API_KEY = os.getenv("FEATHERLESS_API_KEY", "")
-FEATHERLESS_BASE_URL = "https://api.featherless.ai/v1"
+# Groq API Configuration
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
-# Model Configuration
-INTERVIEWER_MODEL = "Qwen/Qwen2.5-7B-Instruct"  # Low latency for real-time conversation
-QUESTION_GEN_MODEL = "meta-llama/Llama-3.3-70B-Instruct"  # High capability for question generation
-DEBRIEF_MODEL = "meta-llama/Llama-3.3-70B-Instruct"  # High capability for analysis
+# Model Configuration - Using Groq-available models
+INTERVIEWER_MODEL = "llama-3.1-8b-instant"  # Fast model for real-time conversation
+QUESTION_GEN_MODEL = "llama-3.1-70b-versatile"  # High capability for question generation
+DEBRIEF_MODEL = "llama-3.1-70b-versatile"  # High capability for analysis
 
 # Interview Flow Configuration
 MAX_CONTEXT_TURNS = 6  # Maximum number of conversation turns to keep in context
@@ -70,6 +69,6 @@ def get_seniority_level(years_of_experience: int) -> str:
 
 def validate_config() -> bool:
     """Validate that all required configuration is present"""
-    if not FEATHERLESS_API_KEY:
-        raise ValueError("FEATHERLESS_API_KEY environment variable is required")
+    if not GROQ_API_KEY:
+        raise ValueError("GROQ_API_KEY environment variable is required")
     return True

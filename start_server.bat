@@ -51,7 +51,7 @@ if not exist ".env" (
     if exist ".env.example" (
         echo [WARNING] .env file not found. Creating from .env.example...
         copy ".env.example" ".env" >nul
-        echo [WARNING] Please edit .env file and add your FEATHERLESS_API_KEY before starting the server
+        echo [WARNING] Please edit .env file and add your GROQ_API_KEY before starting the server
         echo.
         echo To edit the .env file:
         echo   notepad .env
@@ -72,9 +72,9 @@ if not exist ".env" (
 :: Parse .env file to check API key (simple check)
 set "API_KEY_SET="
 for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
-    if "%%a"=="FEATHERLESS_API_KEY" (
+    if "%%a"=="GROQ_API_KEY" (
         if not "%%b"=="" (
-            if not "%%b"=="your_featherless_api_key_here" (
+            if not "%%b"=="your_groq_api_key_here" (
                 set "API_KEY_SET=1"
             )
         )
@@ -82,13 +82,13 @@ for /f "usebackq tokens=1,2 delims==" %%a in (".env") do (
 )
 
 if not defined API_KEY_SET (
-    echo [ERROR] FEATHERLESS_API_KEY not set in .env file
-    echo Please edit .env and add your Featherless API key
+    echo [ERROR] GROQ_API_KEY not set in .env file
+    echo Please edit .env and add your Groq API key
     pause
     exit /b 1
 )
 
-echo [SUCCESS] FEATHERLESS_API_KEY is configured
+echo [SUCCESS] GROQ_API_KEY is configured
 
 :: Start the server
 echo [INFO] Starting the Stage 2 backend server...

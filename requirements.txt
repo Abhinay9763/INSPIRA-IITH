@@ -7,8 +7,8 @@ uvicorn[standard]==0.24.0
 # Pydantic for data validation
 pydantic==2.5.0
 
-# OpenAI SDK (configured for Featherless)
-openai==1.3.7
+# Groq SDK (instead of OpenAI SDK for Featherless)
+groq==0.4.1
 
 # Text-to-Speech
 edge-tts==6.1.9

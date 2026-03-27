@@ -35,15 +35,15 @@ async def lifespan(app: FastAPI):
 
     # Test connections
     try:
-        from .utils.featherless_client import get_featherless_client
-        client = get_featherless_client()
+        from .utils.groq_client import get_groq_client
+        client = get_groq_client()
         is_connected = client.test_connection()
         if is_connected:
-            logger.info("Featherless API connection successful")
+            logger.info("Groq API connection successful")
         else:
-            logger.warning("Featherless API connection test failed")
+            logger.warning("Groq API connection test failed")
     except Exception as e:
-        logger.warning(f"Could not test Featherless connection: {e}")
+        logger.warning(f"Could not test Groq connection: {e}")
 
     yield
 

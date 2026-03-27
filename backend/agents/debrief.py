@@ -9,7 +9,7 @@ from ..models.interview import (
     QuestionBank, ConversationTurn, DebriefReport,
     PhaseBreakdown, AnswerFeedback, ResumeVsReality, StudyRecommendation
 )
-from ..utils.featherless_client import get_featherless_client
+from ..utils.groq_client import get_groq_client
 from ..config import DEBRIEF_MODEL, PROMPTS_DIR
 
 logger = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ class DebriefAgent:
 
     def __init__(self):
         """Initialize the debrief agent"""
-        self.client = get_featherless_client()
+        self.client = get_groq_client()
         self.model = DEBRIEF_MODEL
         logger.info("Debrief Agent initialized")
 

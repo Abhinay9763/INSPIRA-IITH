@@ -116,12 +116,12 @@ Key environment variables in `.env`:
 
 ```bash
 # Required
-FEATHERLESS_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 
 # Optional overrides
-INTERVIEWER_MODEL=Qwen/Qwen2.5-7B-Instruct
-QUESTION_GEN_MODEL=meta-llama/Llama-3.3-70B-Instruct
-DEBRIEF_MODEL=meta-llama/Llama-3.3-70B-Instruct
+INTERVIEWER_MODEL=llama-3.1-8b-instant
+QUESTION_GEN_MODEL=llama-3.1-70b-versatile
+DEBRIEF_MODEL=llama-3.1-70b-versatile
 TTS_VOICE=en-US-GuyNeural
 API_HOST=0.0.0.0
 API_PORT=8000
@@ -131,14 +131,14 @@ API_PORT=8000
 
 - **FastAPI + uvicorn** - REST API framework
 - **Pydantic** - Data validation and serialization
-- **OpenAI SDK** - Configured for Featherless API (NOT Groq)
+- **Groq SDK** - LLM inference with high-speed models
 - **edge-tts** - Text-to-speech conversion
-- **Featherless AI** - LLM inference provider
+- **Groq** - LLM inference provider
 
 ### Models Used
-- **Question Generator**: meta-llama/Llama-3.3-70B-Instruct (high capability)
-- **Interviewer**: Qwen/Qwen2.5-7B-Instruct (low latency)
-- **Debrief**: meta-llama/Llama-3.3-70B-Instruct (comprehensive analysis)
+- **Question Generator**: llama-3.1-70b-versatile (high capability)
+- **Interviewer**: llama-3.1-8b-instant (low latency)
+- **Debrief**: llama-3.1-70b-versatile (comprehensive analysis)
 
 ## 📁 Project Structure
 
@@ -158,7 +158,7 @@ backend/
 │   ├── interviewer.txt
 │   └── debrief.txt
 └── utils/
-    ├── featherless_client.py  # API client wrapper
+    ├── groq_client.py         # API client wrapper
     └── tts.py                # Text-to-speech service
 ```
 
@@ -184,7 +184,7 @@ This prevents context window overflow while maintaining conversation quality.
 ## 🚨 Important Notes
 
 - **Question Bank Security**: Never exposed to frontend - internal use only
-- **LLM Provider**: Uses OpenAI SDK pointed at Featherless (not Groq SDK)
+- **LLM Provider**: Uses Groq SDK for high-speed inference
 - **Prompt Loading**: All prompts loaded from `.txt` files at runtime
 - **Error Handling**: Graceful degradation if TTS fails (text still works)
 - **Session Cleanup**: Automatic cleanup after interview completion

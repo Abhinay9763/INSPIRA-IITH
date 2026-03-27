@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 from typing import Dict, Any
 from ..models.interview import QuestionBank, Question, QuestionCategory, QuestionDifficulty
-from ..utils.featherless_client import get_featherless_client
+from ..utils.groq_client import get_groq_client
 from ..config import QUESTION_GEN_MODEL, PROMPTS_DIR, get_seniority_level, INTERVIEW_FLAVORS
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ class QuestionGenerator:
 
     def __init__(self):
         """Initialize the question generator"""
-        self.client = get_featherless_client()
+        self.client = get_groq_client()
         self.model = QUESTION_GEN_MODEL
         logger.info("Question Generator initialized")
 

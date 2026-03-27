@@ -72,7 +72,7 @@ if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
         print_warning ".env file not found. Creating from .env.example..."
         cp .env.example .env
-        print_warning "Please edit .env file and add your FEATHERLESS_API_KEY before starting the server"
+        print_warning "Please edit .env file and add your GROQ_API_KEY before starting the server"
         echo ""
         echo "To edit the .env file:"
         echo "  nano .env"
@@ -82,22 +82,22 @@ if [ ! -f ".env" ]; then
         read -p "Press Enter after you've added your API key to .env..."
     else
         print_error ".env file not found and .env.example doesn't exist"
-        print_error "Please create a .env file with FEATHERLESS_API_KEY=your_key_here"
+        print_error "Please create a .env file with GROQ_API_KEY=your_key_here"
         exit 1
     fi
 else
     print_success ".env file found"
 fi
 
-# Check if FEATHERLESS_API_KEY is set
+# Check if GROQ_API_KEY is set
 source .env
-if [ -z "$FEATHERLESS_API_KEY" ] || [ "$FEATHERLESS_API_KEY" = "your_featherless_api_key_here" ]; then
-    print_error "FEATHERLESS_API_KEY not set in .env file"
-    print_error "Please edit .env and add your Featherless API key"
+if [ -z "$GROQ_API_KEY" ] || [ "$GROQ_API_KEY" = "your_groq_api_key_here" ]; then
+    print_error "GROQ_API_KEY not set in .env file"
+    print_error "Please edit .env and add your Groq API key"
     exit 1
 fi
 
-print_success "FEATHERLESS_API_KEY is configured"
+print_success "GROQ_API_KEY is configured"
 
 # Start the server
 print_status "Starting the Stage 2 backend server..."

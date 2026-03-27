@@ -9,7 +9,7 @@ from ..models.interview import (
     QuestionBank, ConversationTurn, InterviewPhase,
     InterviewState
 )
-from ..utils.featherless_client import get_featherless_client
+from ..utils.groq_client import get_groq_client
 from ..utils.tts import generate_speech
 from ..config import INTERVIEWER_MODEL, PROMPTS_DIR, MAX_CONTEXT_TURNS
 
@@ -20,7 +20,7 @@ class InterviewerAgent:
 
     def __init__(self):
         """Initialize the interviewer agent"""
-        self.client = get_featherless_client()
+        self.client = get_groq_client()
         self.model = INTERVIEWER_MODEL
         logger.info("Interviewer Agent initialized")
 
