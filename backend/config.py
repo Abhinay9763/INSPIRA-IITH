@@ -2,6 +2,13 @@
 
 import os
 from typing import Dict
+from dotenv import load_dotenv
+from pathlib import Path
+
+# Load environment variables from .env file
+# Look for .env file in the project root (parent of backend)
+env_path = Path(__file__).parent.parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 # Featherless API Configuration
 FEATHERLESS_API_KEY = os.getenv("FEATHERLESS_API_KEY", "")
