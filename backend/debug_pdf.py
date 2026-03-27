@@ -7,7 +7,7 @@ import sys
 import os
 sys.path.append('.')
 
-from utils.pdf_parser import pdf_parser
+from .utils.pdf_parser import pdf_parser
 
 def find_resume_file():
     """Find a PDF file in common locations."""

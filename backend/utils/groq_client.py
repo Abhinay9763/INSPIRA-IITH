@@ -9,7 +9,7 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from groq import Groq
-from config import GROQ_API_KEY, validate_config
+from ..config import GROQ_API_KEY, validate_config
 
 logger = logging.getLogger(__name__)
 
@@ -124,10 +124,12 @@ class GroqClient:
             The prompt template as a string
         """
         try:
-            with open(f"prompts/{prompt_file}", 'r', encoding='utf-8') as f:
+            from ..config import PROMPTS_DIR
+            prompt_path = f"{PROMPTS_DIR}/{prompt_file}"
+            with open(prompt_path, 'r', encoding='utf-8') as f:
                 return f.read().strip()
         except FileNotFoundError:
-            raise FileNotFoundError(f"Prompt file not found: prompts/{prompt_file}")
+            raise FileNotFoundError(f"Prompt file not found: {PROMPTS_DIR}/{prompt_file}")
         except Exception as e:
             raise Exception(f"Failed to load prompt template: {str(e)}")
 

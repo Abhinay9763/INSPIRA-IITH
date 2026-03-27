@@ -9,21 +9,21 @@ from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
 
 # Stage 1 Imports
-from models.candidate import FinalCandidateProfile
-from utils.pdf_parser import pdf_parser
-from agents.resume_analyst import resume_analyst
-from agents.github_scout import github_scout
-from agents.scorer import scoring_agent
+from .models.candidate import FinalCandidateProfile
+from .utils.pdf_parser import pdf_parser
+from .agents.resume_analyst import resume_analyst
+from .agents.github_scout import github_scout
+from .agents.scorer import scoring_agent
 
 # Stage 2 Imports
-from models.interview import (
+from .models.interview import (
     InterviewState, ConversationTurn, InterviewPhase,
     QuestionBank, DebriefReport, StakeholderType, StakeholderReport
 )
-from agents.question_generator import get_question_generator
-from agents.interviewer import get_interviewer_agent
-from agents.debrief import get_debrief_agent
-from agents.stakeholder import get_stakeholder_agent
+from .agents.question_generator import get_question_generator
+from .agents.interviewer import get_interviewer_agent
+from .agents.debrief import get_debrief_agent
+from .agents.stakeholder import get_stakeholder_agent
 
 logger = logging.getLogger(__name__)
 

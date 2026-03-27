@@ -10,9 +10,9 @@ import logging
 from typing import Optional, List, Dict, Any
 import httpx
 import textstat
-from models.candidate import GitHubSignals, Repository, README
-from utils.groq_client import groq_client
-from config import (
+from ..models.candidate import GitHubSignals, Repository, README
+from ..utils.groq_client import groq_client
+from ..config import (
     GITHUB_TOKEN, MAX_REPOS_TO_SCAN, README_SCORER_MODEL,
     README_MIN_WORDS, README_LOW_QUALITY_SCORE, README_MEDIUM_QUALITY_SCORE
 )

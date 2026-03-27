@@ -7,8 +7,8 @@ import sys
 import asyncio
 sys.path.append('.')
 
-from utils.pdf_parser import pdf_parser
-from utils.groq_client import groq_client
+from .utils.pdf_parser import pdf_parser
+from .utils.groq_client import groq_client
 
 async def test_llm_input():
     """Test what text the resume analyst receives."""

@@ -4,9 +4,9 @@ Uses Groq LLM to parse resume text and extract candidate information.
 """
 
 import logging
-from models.candidate import CandidateProfile
-from utils.groq_client import groq_client
-from config import RESUME_ANALYST_MODEL
+from ..models.candidate import CandidateProfile
+from ..utils.groq_client import groq_client
+from ..config import RESUME_ANALYST_MODEL
 
 logger = logging.getLogger(__name__)
 

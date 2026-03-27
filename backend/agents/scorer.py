@@ -7,12 +7,12 @@ import json
 import logging
 from typing import Optional, Dict, Any, List
 from datetime import datetime
-from models.candidate import (
+from ..models.candidate import (
     CandidateProfile, GitHubSignals, ScoreBreakdown,
     InterviewThread, FinalCandidateProfile
 )
-from utils.groq_client import groq_client
-from config import SCORING_AGENT_MODEL, WEIGHTS
+from ..utils.groq_client import groq_client
+from ..config import SCORING_AGENT_MODEL, WEIGHTS
 
 logger = logging.getLogger(__name__)
 

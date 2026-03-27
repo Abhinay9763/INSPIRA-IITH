@@ -12,17 +12,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 # Stage 1 Imports
-from models.candidate import FinalCandidateProfile
-from orchestrator import stage1_orchestrator
-from config import MAX_FILE_SIZE_MB, validate_config, API_HOST, API_PORT
+from .models.candidate import FinalCandidateProfile
+from .orchestrator import stage1_orchestrator
+from .config import MAX_FILE_SIZE_MB, validate_config, API_HOST, API_PORT
 
 # Stage 2 Imports
-from models.interview import (
+from .models.interview import (
     InterviewStartRequest, InterviewStartResponse,
     InterviewTurnRequest, InterviewTurnResponse,
     DebriefResponse, StakeholderResponse, ErrorResponse
 )
-from orchestrator import get_orchestrator
+from .orchestrator import get_orchestrator
 
 # Configure logging
 logging.basicConfig(
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
 
     # Test connections
     try:
-        from utils.groq_client import get_groq_client
+        from .utils.groq_client import get_groq_client
         client = get_groq_client()
         is_connected = client.test_connection()
         if is_connected:

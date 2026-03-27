@@ -8,7 +8,7 @@ import logging
 from typing import List
 from io import BytesIO
 import pdfplumber
-from models.candidate import PDFExtraction
+from ..models.candidate import PDFExtraction
 
 try:
     import PyPDF2
