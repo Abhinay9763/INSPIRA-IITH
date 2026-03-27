@@ -1,5 +1,5 @@
 """Debrief Agent - post interview analysis and feedback
-Uses meta-llama/Llama-3.3-70B-Instruct model"""
+Uses llama-3.3-70b-versatile model"""
 
 import json
 import logging

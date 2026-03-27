@@ -1,5 +1,5 @@
 """Question Generator Agent - generates internal question bank
-Uses meta-llama/Llama-3.3-70B-Instruct model"""
+Uses llama-3.3-70b-versatile model"""
 
 import json
 import logging

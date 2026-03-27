@@ -52,9 +52,15 @@ POST /interview/start
 **Request:**
 ```json
 {
-  "candidate_profile": { /* Stage 1 output */ },
-  "target_company": "Google",
-  "target_role": "Senior Software Engineer"
+  "candidate_profile": {
+    /* Stage 1 output including: */
+    "name": "John Doe",
+    "years_of_experience": 5,
+    "skills": [...],
+    "target_company": "Google",
+    "target_role": "Senior Software Engineer",
+    /* ... other profile data ... */
+  }
 }
 ```
 
@@ -120,8 +126,8 @@ GROQ_API_KEY=your_api_key_here
 
 # Optional overrides
 INTERVIEWER_MODEL=llama-3.1-8b-instant
-QUESTION_GEN_MODEL=llama-3.1-70b-versatile
-DEBRIEF_MODEL=llama-3.1-70b-versatile
+QUESTION_GEN_MODEL=llama-3.3-70b-versatile
+DEBRIEF_MODEL=llama-3.3-70b-versatile
 TTS_VOICE=en-US-GuyNeural
 API_HOST=0.0.0.0
 API_PORT=8000
@@ -136,9 +142,9 @@ API_PORT=8000
 - **Groq** - LLM inference provider
 
 ### Models Used
-- **Question Generator**: llama-3.1-70b-versatile (high capability)
+- **Question Generator**: llama-3.3-70b-versatile (high capability)
 - **Interviewer**: llama-3.1-8b-instant (low latency)
-- **Debrief**: llama-3.1-70b-versatile (comprehensive analysis)
+- **Debrief**: llama-3.3-70b-versatile (comprehensive analysis)
 
 ## 📁 Project Structure
 

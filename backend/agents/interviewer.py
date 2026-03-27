@@ -1,5 +1,5 @@
 """Interviewer Agent - handles one interview turn
-Uses Qwen/Qwen2.5-7B-Instruct model for low latency conversations"""
+Uses llama-3.1-8b-instant model for low latency conversations"""
 
 import json
 import logging

@@ -17,6 +17,8 @@ EXAMPLE_CANDIDATE_PROFILE = {
     "name": "John Doe",
     "email": "john.doe@email.com",
     "years_of_experience": 3,
+    "target_company": "Google",
+    "target_role": "Software Engineer",
     "skills": [
         "Python", "JavaScript", "React", "Node.js",
         "PostgreSQL", "Docker", "AWS", "Git"
@@ -80,18 +82,14 @@ class InterviewClient:
 
     async def start_interview(
         self,
-        candidate_profile: Dict[str, Any],
-        target_company: str = "Google",
-        target_role: str = "Software Engineer"
+        candidate_profile: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Start a new interview session"""
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 f"{self.base_url}/interview/start",
                 json={
-                    "candidate_profile": candidate_profile,
-                    "target_company": target_company,
-                    "target_role": target_role
+                    "candidate_profile": candidate_profile
                 }
             )
             response.raise_for_status()
@@ -179,9 +177,7 @@ async def run_example_interview():
 
         print("\n🚀 Starting interview session...")
         start_response = await client.start_interview(
-            EXAMPLE_CANDIDATE_PROFILE,
-            target_company="Google",
-            target_role="Software Engineer"
+            EXAMPLE_CANDIDATE_PROFILE
         )
 
         print(f"✅ Session started: {client.session_id}")

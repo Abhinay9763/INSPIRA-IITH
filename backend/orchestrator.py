@@ -56,25 +56,38 @@ class InterviewOrchestrator:
 
         logger.debug(f"Added turn {interview_state.turn_count} to session")
 
+    def _extract_target_info(self, candidate_profile: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]:
+        """Extract target company and role from candidate profile"""
+        target_company = candidate_profile.get("target_company")
+        target_role = candidate_profile.get("target_role")
+
+        # Try alternative field names commonly used in profiles
+        if not target_company:
+            target_company = candidate_profile.get("desired_company") or candidate_profile.get("company")
+
+        if not target_role:
+            target_role = candidate_profile.get("desired_role") or candidate_profile.get("position") or candidate_profile.get("job_title") or candidate_profile.get("target_position")
+
+        return target_company, target_role
+
     async def run_stage_two_start(
         self,
-        candidate_profile: Dict[str, Any],
-        target_company: str = None,
-        target_role: str = None
+        candidate_profile: Dict[str, Any]
     ) -> Tuple[str, str, Optional[str]]:
         """
         Start Stage 2 interview process
 
         Args:
-            candidate_profile: Final candidate profile JSON from Stage 1
-            target_company: Target company for interview
-            target_role: Target role for interview
+            candidate_profile: Final candidate profile JSON from Stage 1 (includes target_company and target_role)
 
         Returns:
             Tuple of (session_id, first_question_text, audio_base64)
         """
         try:
             logger.info("Starting Stage 2 interview process")
+
+            # Extract target company and role from candidate profile
+            target_company, target_role = self._extract_target_info(candidate_profile)
 
             # Generate session ID
             session_id = self._generate_session_id()

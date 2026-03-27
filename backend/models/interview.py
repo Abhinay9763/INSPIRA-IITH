@@ -62,9 +62,7 @@ class InterviewState(BaseModel):
 
 class InterviewStartRequest(BaseModel):
     """Request to start an interview"""
-    candidate_profile: Dict[str, Any] = Field(..., description="Final candidate profile JSON from Stage 1")
-    target_company: Optional[str] = Field(None, description="Target company for the interview")
-    target_role: Optional[str] = Field(None, description="Target role for the interview")
+    candidate_profile: Dict[str, Any] = Field(..., description="Final candidate profile JSON from Stage 1 (including target_company and target_role)")
 
 class InterviewStartResponse(BaseModel):
     """Response for starting an interview"""

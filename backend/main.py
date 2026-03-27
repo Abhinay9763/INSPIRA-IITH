@@ -107,7 +107,7 @@ async def start_interview(
     Start a new mock interview session
 
     This endpoint:
-    1. Receives candidate profile from Stage 1
+    1. Receives candidate profile from Stage 1 (including target company/role)
     2. Generates question bank based on candidate seniority
     3. Initiates interview with first question
     4. Returns first question as text + audio
@@ -121,9 +121,7 @@ async def start_interview(
 
         # Start interview
         session_id, first_question, audio_base64 = await orchestrator.run_stage_two_start(
-            request.candidate_profile,
-            request.target_company,
-            request.target_role
+            request.candidate_profile
         )
 
         response = InterviewStartResponse(
