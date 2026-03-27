@@ -15,8 +15,8 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Model Configuration - Using Groq-available models
 INTERVIEWER_MODEL = "llama-3.1-8b-instant"  # Fast model for real-time conversation
-QUESTION_GEN_MODEL = "llama-3.3-70b-versatile"  # High capability for question generation
-DEBRIEF_MODEL = "llama-3.3-70b-versatile"  # High capability for analysis
+QUESTION_GEN_MODEL = "llama-3.1-70b-versatile"  # High capability for question generation
+DEBRIEF_MODEL = "llama-3.1-70b-versatile"  # High capability for analysis
 
 # Interview Flow Configuration
 MAX_CONTEXT_TURNS = 6  # Maximum number of conversation turns to keep in context

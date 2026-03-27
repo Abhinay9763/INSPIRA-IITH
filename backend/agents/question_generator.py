@@ -16,9 +16,15 @@ class QuestionGenerator:
 
     def __init__(self):
         """Initialize the question generator"""
-        self.client = get_groq_client()
+        self.client = None  # Lazy-initialized on first use
         self.model = QUESTION_GEN_MODEL
         logger.info("Question Generator initialized")
+
+    async def _get_client(self):
+        """Get or initialize the groq client"""
+        if self.client is None:
+            self.client = get_groq_client()
+        return self.client
 
     def _load_prompt(self) -> str:
         """Load the question generator prompt from file"""
@@ -126,15 +132,19 @@ Return ONLY a valid JSON object with no additional text."""
             # Make API call
             messages = [{"role": "user", "content": prompt}]
 
-            response = await self.client.chat_completion(
+            client = await self._get_client()
+            response = await client.chat_completion(
                 model=self.model,
                 messages=messages,
                 temperature=0.7,
                 max_tokens=4000
             )
 
+            logger.info("Received response from LLM, parsing...")
+
             # Parse response
             response_text = response.choices[0].message.content.strip()
+            logger.info(f"Response text length: {len(response_text)} chars")
 
             # Clean up response if it has markdown formatting
             if response_text.startswith("```json"):
@@ -142,7 +152,9 @@ Return ONLY a valid JSON object with no additional text."""
             if response_text.endswith("```"):
                 response_text = response_text[:-3]
 
+            logger.info("Parsing JSON response...")
             response_json = json.loads(response_text)
+            logger.info(f"JSON parsed successfully, has {len(response_json.get('questions', []))} questions")
 
             # Convert to our models
             questions = []

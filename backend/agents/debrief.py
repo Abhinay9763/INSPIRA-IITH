@@ -19,9 +19,15 @@ class DebriefAgent:
 
     def __init__(self):
         """Initialize the debrief agent"""
-        self.client = get_groq_client()
+        self.client = None  # Lazy-initialized
         self.model = DEBRIEF_MODEL
         logger.info("Debrief Agent initialized")
+
+    async def _get_client(self):
+        """Get or initialize the groq client"""
+        if self.client is None:
+            self.client = get_groq_client()
+        return self.client
 
     def _load_prompt(self) -> str:
         """Load the debrief prompt from file"""
@@ -129,7 +135,8 @@ Generate comprehensive debrief following the exact JSON format specified. Be tho
             # Make API call
             messages = [{"role": "user", "content": prompt}]
 
-            response = await self.client.chat_completion(
+            client = await self._get_client()
+            response = await client.chat_completion(
                 model=self.model,
                 messages=messages,
                 temperature=0.3,  # Lower temperature for more consistent analysis
@@ -167,45 +174,92 @@ Generate comprehensive debrief following the exact JSON format specified. Be tho
             # Add conversation history to the response
             debrief_data["conversation_history"] = conversation_for_response
 
-            # Parse into Pydantic models for validation
+            # Parse into Pydantic models with comprehensive validation
+            def sanitize_score(value, min_val, max_val, default_val):
+                """Sanitize score values to be within valid range"""
+                try:
+                    score = int(value) if value is not None else default_val
+                    return max(min_val, min(max_val, score))
+                except (ValueError, TypeError):
+                    return default_val
+
+            def sanitize_string(value, default=""):
+                """Sanitize string values"""
+                return str(value).strip() if value is not None else default
+
+            def sanitize_literal(value, valid_options, default):
+                """Sanitize literal values to match allowed options"""
+                if value in valid_options:
+                    return value
+                # Try case-insensitive match
+                value_lower = str(value).lower().strip()
+                for option in valid_options:
+                    if option.lower() == value_lower:
+                        return option
+                return default
+
+            def sanitize_boolean(value):
+                """Sanitize boolean values"""
+                if isinstance(value, bool):
+                    return value
+                if isinstance(value, str):
+                    return len(value.strip()) > 0 and value.lower() not in ['false', 'no', '0', 'none']
+                return bool(value)
+
+            # Parse phase breakdown with validation
             phase_breakdown = {}
             for phase_name, phase_data in debrief_data.get("phase_breakdown", {}).items():
                 phase_breakdown[phase_name] = PhaseBreakdown(
-                    score=phase_data["score"],
-                    feedback=phase_data["feedback"]
+                    score=sanitize_score(phase_data.get("score"), 0, 100, 50),
+                    feedback=sanitize_string(phase_data.get("feedback"), "No feedback provided")
                 )
 
+            # Parse answer feedback with validation
             answer_feedback = []
             for feedback_item in debrief_data.get("answer_feedback", []):
+                # Handle resume_gap_flagged field specially
+                resume_gap_flagged_value = feedback_item.get("resume_gap_flagged", False)
+                resume_gap_note_value = sanitize_string(feedback_item.get("resume_gap_note"))
+
+                if isinstance(resume_gap_flagged_value, str):
+                    # If it's a string, convert to boolean and preserve text in note
+                    resume_gap_flagged = sanitize_boolean(resume_gap_flagged_value)
+                    if not resume_gap_note_value and resume_gap_flagged_value.strip():
+                        resume_gap_note_value = resume_gap_flagged_value.strip()
+                else:
+                    resume_gap_flagged = sanitize_boolean(resume_gap_flagged_value)
+
                 answer_feedback.append(AnswerFeedback(
-                    question=feedback_item["question"],
-                    candidate_answer_summary=feedback_item["candidate_answer_summary"],
-                    score=feedback_item["score"],
-                    stronger_answer_example=feedback_item["stronger_answer_example"],
-                    resume_gap_flagged=feedback_item.get("resume_gap_flagged", False),
-                    resume_gap_note=feedback_item.get("resume_gap_note", "")
+                    question=sanitize_string(feedback_item.get("question"), "No question"),
+                    candidate_answer_summary=sanitize_string(feedback_item.get("candidate_answer_summary"), "No summary provided"),
+                    score=sanitize_score(feedback_item.get("score"), 1, 10, 5),  # 1-10 range
+                    stronger_answer_example=sanitize_string(feedback_item.get("stronger_answer_example"), "No example provided"),
+                    resume_gap_flagged=resume_gap_flagged,
+                    resume_gap_note=resume_gap_note_value
                 ))
 
+            # Parse resume vs reality with validation
             resume_vs_reality = []
             for rvr_item in debrief_data.get("resume_vs_reality", []):
                 resume_vs_reality.append(ResumeVsReality(
-                    claim=rvr_item["claim"],
-                    demonstrated=rvr_item["demonstrated"],
-                    verdict=rvr_item["verdict"]
+                    claim=sanitize_string(rvr_item.get("claim"), "No claim"),
+                    demonstrated=sanitize_string(rvr_item.get("demonstrated"), "No demonstration"),
+                    verdict=sanitize_literal(rvr_item.get("verdict"), ["matched", "gap", "exceeded"], "gap")
                 ))
 
+            # Parse study recommendations with validation
             study_recommendations = []
             for rec_item in debrief_data.get("study_recommendations", []):
                 study_recommendations.append(StudyRecommendation(
-                    priority=rec_item["priority"],
-                    topic=rec_item["topic"],
-                    reason=rec_item["reason"]
+                    priority=sanitize_literal(rec_item.get("priority"), ["high", "medium", "low"], "medium"),
+                    topic=sanitize_string(rec_item.get("topic"), "General study"),
+                    reason=sanitize_string(rec_item.get("reason"), "No reason provided")
                 ))
 
             # Create final debrief report
             debrief_report = DebriefReport(
-                overall_score=debrief_data["overall_score"],
-                summary=debrief_data["summary"],
+                overall_score=sanitize_score(debrief_data.get("overall_score"), 0, 100, 50),
+                summary=sanitize_string(debrief_data.get("summary"), "No summary provided"),
                 phase_breakdown=phase_breakdown,
                 answer_feedback=answer_feedback,
                 resume_vs_reality=resume_vs_reality,

@@ -20,9 +20,15 @@ class InterviewerAgent:
 
     def __init__(self):
         """Initialize the interviewer agent"""
-        self.client = get_groq_client()
+        self.client = None  # Lazy-initialized
         self.model = INTERVIEWER_MODEL
         logger.info("Interviewer Agent initialized")
+
+    async def _get_client(self):
+        """Get or initialize the groq client"""
+        if self.client is None:
+            self.client = get_groq_client()
+        return self.client
 
     def _load_prompt(self) -> str:
         """Load the interviewer prompt from file"""
@@ -195,7 +201,8 @@ Remember:
             logger.debug(f"Sending {len(messages)} messages to LLM for turn {interview_state.turn_count + 1}")
 
             # Make API call
-            response = await self.client.chat_completion(
+            client = await self._get_client()
+            response = await client.chat_completion(
                 model=self.model,
                 messages=messages,
                 temperature=0.8,  # Slightly higher for more natural conversation
