@@ -1,1 +1,1 @@
-"""Agents package for resume analysis pipeline."""
+"""Agents package for AI Interview Preparation Platform - Resume Analysis & Interview Agents."""

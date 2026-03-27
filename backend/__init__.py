@@ -1,1 +1,1 @@
-"""Backend package for resume analysis application."""
+"""Backend package for AI Interview Preparation Platform - Complete Stage 1 & 2."""

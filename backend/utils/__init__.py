@@ -1,1 +1,1 @@
-"""Utilities package for helper functions and clients."""
+"""Utilities package for helper functions, clients, PDF parsing, and TTS."""

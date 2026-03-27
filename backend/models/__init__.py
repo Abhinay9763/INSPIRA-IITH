@@ -1,1 +1,1 @@
-"""Models package for Pydantic data models."""
+"""Models package for Pydantic data models - Candidate & Interview Models."""

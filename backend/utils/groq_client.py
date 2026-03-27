@@ -1,5 +1,6 @@
 """
-Groq client utility for LLM interactions.
+Combined Groq client utility for LLM interactions.
+Supports both Stage 1 (resume analysis) and Stage 2 (interview) API patterns.
 Centralized module for all Groq API calls with error handling.
 """
 
@@ -8,19 +9,30 @@ import logging
 import asyncio
 from typing import Dict, Any, Optional
 from groq import Groq
-from config import GROQ_API_KEY
+from config import GROQ_API_KEY, validate_config
 
 logger = logging.getLogger(__name__)
 
 
 class GroqClient:
-    """Centralized Groq client for LLM interactions."""
+    """Unified Groq client for LLM interactions supporting both Stage 1 and Stage 2 patterns."""
 
     def __init__(self):
+        """Initialize the Groq client"""
         if not GROQ_API_KEY:
             raise ValueError("GROQ_API_KEY environment variable is required")
 
+        validate_config()
         self.client = Groq(api_key=GROQ_API_KEY)
+        self._client = self.client  # Stage 2 compatibility
+        logger.info("Groq client initialized successfully")
+
+    @property
+    def client_property(self) -> Groq:
+        """Get the Groq client instance (Stage 2 compatibility)"""
+        return self._client
+
+    # === STAGE 1 METHODS (Resume Analysis) ===
 
     async def send_prompt(
         self,
@@ -32,7 +44,7 @@ class GroqClient:
         timeout: int = 60
     ) -> Dict[str, Any]:
         """
-        Send a prompt to Groq and return the response.
+        Send a prompt to Groq and return the response (Stage 1 method).
 
         Args:
             model: The model name to use
@@ -40,6 +52,7 @@ class GroqClient:
             temperature: Sampling temperature (0.0-1.0)
             max_tokens: Maximum tokens to generate
             json_mode: Whether to request JSON output
+            timeout: Request timeout in seconds
 
         Returns:
             Dict response from the model
@@ -102,7 +115,7 @@ class GroqClient:
 
     def load_prompt_template(self, prompt_file: str) -> str:
         """
-        Load a prompt template from the prompts directory.
+        Load a prompt template from the prompts directory (Stage 1 method).
 
         Args:
             prompt_file: Name of the prompt file (e.g., 'resume_analyst.txt')
@@ -118,6 +131,70 @@ class GroqClient:
         except Exception as e:
             raise Exception(f"Failed to load prompt template: {str(e)}")
 
+    # === STAGE 2 METHODS (Interview) ===
 
-# Global instance
+    async def chat_completion(
+        self,
+        model: str,
+        messages: list,
+        temperature: float = 0.7,
+        max_tokens: Optional[int] = None,
+        **kwargs
+    ):
+        """
+        Create a chat completion using the Groq API (Stage 2 method)
+
+        Args:
+            model: The model to use (e.g., "llama-3.1-70b-versatile")
+            messages: List of message dictionaries
+            temperature: Sampling temperature
+            max_tokens: Maximum tokens to generate
+            **kwargs: Additional parameters to pass to the API
+
+        Returns:
+            Chat completion response
+        """
+        try:
+            response = self._client.chat.completions.create(
+                model=model,
+                messages=messages,
+                temperature=temperature,
+                max_tokens=max_tokens,
+                **kwargs
+            )
+            logger.debug(f"Chat completion successful for model {model}")
+            return response
+        except Exception as e:
+            logger.error(f"Chat completion failed for model {model}: {str(e)}")
+            raise
+
+    def test_connection(self) -> bool:
+        """Test the connection to Groq API (Stage 2 method)"""
+        try:
+            # Make a simple test call
+            response = self._client.chat.completions.create(
+                model="llama-3.1-8b-instant",
+                messages=[{"role": "user", "content": "Hello"}],
+                max_tokens=5
+            )
+            logger.info("Groq API connection test successful")
+            return True
+        except Exception as e:
+            logger.error(f"Groq API connection test failed: {str(e)}")
+            return False
+
+
+# === GLOBAL INSTANCES (Supporting both Stage 1 and Stage 2 patterns) ===
+
+# Stage 1 Global instance
 groq_client = GroqClient()
+
+# Stage 2 Global client instance
+_groq_client: Optional[GroqClient] = None
+
+def get_groq_client() -> GroqClient:
+    """Get or create the global Groq client instance (Stage 2 pattern)"""
+    global _groq_client
+    if _groq_client is None:
+        _groq_client = GroqClient()
+    return _groq_client
