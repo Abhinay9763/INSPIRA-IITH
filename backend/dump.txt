@@ -1,0 +1,67 @@
+Abhinay Kumar Vengala
+Computer Science Undergraduate(YrI-SemII)
+Hyderabad,India
+abhinay.vengala9@gmail.com | +919849676816
+LinkedIn | Github
+Summary
+ASelf-taught programmer sincethe ageof 12, currently persuinga B.TechCSE(2025-2029) programto fillthe gaps
+withinmy knowledge. Aburning desireto build “fun” projectsand solve problems that pushme tomy limits.
+Ihave worked with Java(minecraft modding, light graphics, Springboot backend, Discord Botsetc), LuaU(roblox
+scripting), C#(Unityand WPF), Python(fastapi backend, data collection, lightML, Discord Bots, desktopdev through
+pyqt), makingme adaptableto any language/frameworkas Ifocuson core programming principles, NOT rote language
+syntax.
+Currently reaching-outfor an internshipor any opportunity that getsme real-world experience.
+Skills
+Technical:
+Languages: C, Java, Python, C#, LuaU, Typescript
+Frameworks: NextJS, Springboot, FastAPI, WPF, Supabase, PyQt,
+Databases: Supabase-PostgreSQL, SQLite, Redis, Vercel-Upstash
+Domain: Backend Development, System Architecture, AI Engineering
+While learning backend development, Ialso developedan understandingof system architecture.
+Soft Skills:
+Leadership : Ledall hackathons/academic project teams, coordinating tasksand executing with clear commands
+Problem Solving: abug, glitchor anything. once igetthe understandingof the system - I’ll solveit
+Direct Communication: Communicates issues clearly without hesitation.
+Analytical Thinking: Ibreak down problems, will always findthe root causeand start solution from there.
+Projects: C#:
+Simple WeatherApp(WPF)
+Java:
+Apersonal projectfor exposureto API’s
+Noob-Bot(Java DiscordAPI)
+Taughtme whatAPI’sareand howthe internet
+Acommissionto develop abot thatcan linkup with communicates
+robloxAPI
+usesWPF forUI, C# forthe API callsto
+Features: Ingame-Token Authorization, Marketplace, openweathermapAPI.
+Reviews, Hire/ForHire listings, Leveling System, Python:
+Admin controletc,. Admin Bot(nextcord)
+Chef-Cord(Java DiscordAPI)
+Acommissionto develop adiscord adminbot.
+Abot madefor an online game-jam withthe genre Features: Admin Commands, Leveling System
+“cook”.
+Data Collection Projects + ML:.
+Itwas aremakeof papa’spizzeriaweb-game, butin
+Campx Result Fetcher: Campxhas its results endpoint
+discord
+public. used pandasand httpxto build ascript capableof
+Features: Button/Embeds/Modalsfor input/interaction,
+gettingany student’sresultsper semester.
+Session-basedso no shared game states. Difficulty
+Urban Risk Intelligence: fetched weather dataand
+modesand apizzaas adish
+satellite imagery, used themto trainan XGBoost model
+Employee System(Springboot + NextJS)
+and predictAir pollution, heat wavesand flood risk
+Employee Management System Made during Udemy factors
+Course(Spring + React)
+Q uizForge(Tri Stack Quiz EcoSystem):.
+Backedby Springboot, Frontendby NextJS
+NextJS frontend, FastAPI backendand PyQt desktop
+Asimple CRUDApp to create Departmentand Faculty
+Appall coupled together
+Iwentout of course-workand included NextJSand
+Question Paper Maker, Schedule Exams, Live Tracking/
+PostgreSQL
+Controller, Result Vieweretc,.
+PyQt Examapp for cheat detection, Blind modeetc,.
+MyUSP: Progressed beyondthe first-year baseline. Ilearnby buildingand studying documentation, Not tutorials
