@@ -15,8 +15,9 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # Model Configuration - Using Groq-available models
 INTERVIEWER_MODEL = "llama-3.1-8b-instant"  # Fast model for real-time conversation
-QUESTION_GEN_MODEL = "llama-3.1-70b-versatile"  # High capability for question generation
-DEBRIEF_MODEL = "llama-3.1-70b-versatile"  # High capability for analysis
+QUESTION_GEN_MODEL = "llama-3.3-70b-versatile"  # High capability for question generation
+DEBRIEF_MODEL = "llama-3.3-70b-versatile"  # High capability for analysis
+STAKEHOLDER_MODEL = "llama-3.3-70b-versatile"  # High capability for stakeholder analysis
 
 # Interview Flow Configuration
 MAX_CONTEXT_TURNS = 6  # Maximum number of conversation turns to keep in context
@@ -49,6 +50,21 @@ INTERVIEW_FLAVORS = {
         "behavioral_percentage": 15,
         "resume_percentage": 15
     }
+}
+
+# Stakeholder Configuration
+STAKEHOLDER_FOCUS_AREAS = {
+    "hiring_manager": ["culture_fit", "growth_potential", "team_dynamics", "leadership"],
+    "technical_lead": ["technical_depth", "code_quality", "system_thinking", "problem_solving"],
+    "hr_representative": ["communication", "cultural_alignment", "risk_factors", "compliance"],
+    "peer_engineer": ["collaboration", "mentoring", "knowledge_sharing", "day_to_day_work"]
+}
+
+STAKEHOLDER_WEIGHTS = {
+    "hiring_manager": 0.35,
+    "technical_lead": 0.30,
+    "hr_representative": 0.20,
+    "peer_engineer": 0.15
 }
 
 # API Configuration

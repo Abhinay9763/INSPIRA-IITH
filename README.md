@@ -8,7 +8,7 @@ Stage 2 provides **Mock Interview and Post-Interview Debrief** functionality for
 
 ### Pipeline Flow
 1. **Question Generator** → Creates interview questions based on candidate profile
-2. **Interviewer Agent** → Conducts conversation across 4 phases with TTS support
+2. **Interviewer Agent** → Conducts conversation across 4 phases
 3. **Debrief Agent** → Analyzes full transcript and generates detailed feedback
 
 ### Interview Phases
@@ -32,7 +32,7 @@ pip install -r requirements.txt
 ### 2. Environment Setup
 ```bash
 cp .env.example .env
-# Edit .env and add your FEATHERLESS_API_KEY
+# Edit .env and add your GROQ_API_KEY
 ```
 
 ### 3. Run the Server
@@ -68,7 +68,6 @@ POST /interview/start
 ```json
 {
   "text": "Hi there! I'm excited to chat with you today...",
-  "audio": "base64_encoded_audio_data",
   "session_id": "uuid-session-id"
 }
 ```
@@ -89,7 +88,6 @@ POST /interview/turn
 ```json
 {
   "text": "Great! Can you tell me more about your experience with...",
-  "audio": "base64_encoded_audio_data",
   "current_phase": "RESUME_DEEP_DIVE",
   "turn_count": 3
 }
@@ -128,7 +126,6 @@ GROQ_API_KEY=your_api_key_here
 INTERVIEWER_MODEL=llama-3.1-8b-instant
 QUESTION_GEN_MODEL=llama-3.3-70b-versatile
 DEBRIEF_MODEL=llama-3.3-70b-versatile
-TTS_VOICE=en-US-GuyNeural
 API_HOST=0.0.0.0
 API_PORT=8000
 ```
@@ -138,7 +135,6 @@ API_PORT=8000
 - **FastAPI + uvicorn** - REST API framework
 - **Pydantic** - Data validation and serialization
 - **Groq SDK** - LLM inference with high-speed models
-- **edge-tts** - Text-to-speech conversion
 - **Groq** - LLM inference provider
 
 ### Models Used
@@ -164,8 +160,7 @@ backend/
 │   ├── interviewer.txt
 │   └── debrief.txt
 └── utils/
-    ├── groq_client.py         # API client wrapper
-    └── tts.py                # Text-to-speech service
+    └── groq_client.py         # API client wrapper
 ```
 
 ## 🔄 Context Management
@@ -182,7 +177,6 @@ This prevents context window overflow while maintaining conversation quality.
 - **Smart Question Generation** - Tailored to candidate's seniority and background
 - **Phase-Based Flow** - Structured interview progression
 - **Context-Aware Responses** - Interviewer references previous answers
-- **Audio Support** - Text-to-speech for realistic experience
 - **Comprehensive Analysis** - Detailed feedback with actionable recommendations
 - **Session Management** - Multiple concurrent interviews supported
 - **Resume Gap Detection** - Compares claims vs demonstrated skills
@@ -192,7 +186,6 @@ This prevents context window overflow while maintaining conversation quality.
 - **Question Bank Security**: Never exposed to frontend - internal use only
 - **LLM Provider**: Uses Groq SDK for high-speed inference
 - **Prompt Loading**: All prompts loaded from `.txt` files at runtime
-- **Error Handling**: Graceful degradation if TTS fails (text still works)
 - **Session Cleanup**: Automatic cleanup after interview completion
 
 ## 🔧 Development

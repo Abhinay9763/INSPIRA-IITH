@@ -7,11 +7,12 @@ from uuid import uuid4
 
 from .models.interview import (
     InterviewState, ConversationTurn, InterviewPhase,
-    QuestionBank, DebriefReport
+    QuestionBank, DebriefReport, StakeholderType, StakeholderReport
 )
 from .agents.question_generator import get_question_generator
 from .agents.interviewer import get_interviewer_agent
 from .agents.debrief import get_debrief_agent
+from .agents.stakeholder import get_stakeholder_agent
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +25,7 @@ class InterviewOrchestrator:
         self.question_generator = get_question_generator()
         self.interviewer_agent = get_interviewer_agent()
         self.debrief_agent = get_debrief_agent()
+        self.stakeholder_agent = get_stakeholder_agent()
         logger.info("Interview Orchestrator initialized")
 
     def _generate_session_id(self) -> str:
@@ -230,13 +232,95 @@ class InterviewOrchestrator:
 
             logger.info(f"Debrief completed. Overall score: {debrief_report.overall_score}")
 
-            # Clean up session
-            del self.active_sessions[session_id]
+            # Store debrief in session for potential stakeholder decision stage
+            interview_state.debrief_report = debrief_report
 
             return debrief_report
 
         except Exception as e:
             logger.error(f"Failed to end interview: {str(e)}")
+            raise
+
+    async def run_stage_three_stakeholder_decision(
+        self,
+        session_id: str
+    ) -> StakeholderReport:
+        """
+        Generate multi-stakeholder hiring decision (Stage 3)
+
+        Uses existing session data (candidate profile, conversation history)
+        and debrief results to simulate stakeholder perspectives
+
+        Args:
+            session_id: Session identifier
+
+        Returns:
+            StakeholderReport with individual decisions and consensus
+        """
+        try:
+            logger.info(f"Starting Stage 3 stakeholder decision for session {session_id}")
+
+            # Validate session exists
+            if session_id not in self.active_sessions:
+                raise ValueError(f"Invalid session ID: {session_id}")
+
+            interview_state = self.active_sessions[session_id]
+
+            # Get or generate debrief report if not already available
+            debrief_report = getattr(interview_state, 'debrief_report', None)
+            if debrief_report is None:
+                logger.info("Debrief report not found in session, generating...")
+                debrief_report = await self.debrief_agent.generate_debrief(
+                    interview_state.full_conversation_history,
+                    interview_state.candidate_profile,
+                    interview_state.question_bank,
+                    interview_state.target_company,
+                    interview_state.target_role
+                )
+
+            # Generate individual stakeholder decisions
+            stakeholder_types = [
+                StakeholderType.HIRING_MANAGER,
+                StakeholderType.TECHNICAL_LEAD,
+                StakeholderType.HR_REPRESENTATIVE,
+                StakeholderType.PEER_ENGINEER
+            ]
+
+            individual_decisions = []
+            logger.info(f"Generating {len(stakeholder_types)} individual stakeholder decisions...")
+
+            for stakeholder_type in stakeholder_types:
+                decision = await self.stakeholder_agent.generate_stakeholder_decision(
+                    stakeholder_type,
+                    debrief_report,
+                    interview_state.candidate_profile,
+                    interview_state.full_conversation_history,
+                    interview_state.target_company,
+                    interview_state.target_role
+                )
+                individual_decisions.append(decision)
+                logger.info(f"{stakeholder_type.value} decision: {decision.decision}")
+
+            # Generate consensus decision
+            logger.info("Generating consensus decision...")
+            stakeholder_report = await self.stakeholder_agent.generate_consensus(
+                individual_decisions,
+                debrief_report,
+                interview_state.candidate_profile,
+                session_id,
+                interview_state.target_company,
+                interview_state.target_role
+            )
+
+            logger.info(f"Stakeholder decision completed: {stakeholder_report.consensus_decision} (confidence: {stakeholder_report.consensus_confidence}%)")
+
+            # Clean up session after stakeholder decision
+            del self.active_sessions[session_id]
+
+            return stakeholder_report
+
+        except Exception as e:
+            logger.error(f"Stakeholder decision failed: {str(e)}")
             raise
 
     def get_session_info(self, session_id: str) -> Optional[Dict[str, Any]]:

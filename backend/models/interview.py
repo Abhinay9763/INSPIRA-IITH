@@ -1,6 +1,6 @@
 """Pydantic models for Stage 2 interview components"""
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Dict, Any, Optional, Literal
 from enum import Enum
 
@@ -57,6 +57,7 @@ class InterviewState(BaseModel):
     turn_count: int = 0
     target_company: Optional[str] = None
     target_role: Optional[str] = None
+    debrief_report: Optional["DebriefReport"] = None
 
 # === REQUEST/RESPONSE MODELS ===
 
@@ -108,6 +109,47 @@ class StudyRecommendation(BaseModel):
     topic: str
     reason: str
 
+# === STAKEHOLDER DECISION MODELS ===
+
+class StakeholderType(str, Enum):
+    """Types of stakeholders in hiring decision"""
+    HIRING_MANAGER = "hiring_manager"
+    TECHNICAL_LEAD = "technical_lead"
+    HR_REPRESENTATIVE = "hr_representative"
+    PEER_ENGINEER = "peer_engineer"
+
+class StakeholderDecision(BaseModel):
+    """Individual stakeholder's hiring decision and feedback"""
+    model_config = ConfigDict(extra="forbid")
+
+    stakeholder_type: StakeholderType
+    decision: Literal["hire", "no_hire", "borderline"]
+    confidence_score: int = Field(..., ge=0, le=100)
+    reasoning: str = Field(..., min_length=1, max_length=2000)
+    key_strengths: List[str] = Field(default_factory=list, max_length=10)
+    key_concerns: List[str] = Field(default_factory=list, max_length=10)
+    focus_areas: Dict[str, str] = Field(default_factory=dict)
+
+class ConsensusMetrics(BaseModel):
+    """Metrics about the consensus building process"""
+    model_config = ConfigDict(extra="forbid")
+
+    agreement_level: int = Field(..., ge=0, le=100)
+    discussion_points: List[str] = Field(default_factory=list, max_length=10)
+    compromise_areas: List[str] = Field(default_factory=list, max_length=10)
+
+class StakeholderReport(BaseModel):
+    """Complete multi-stakeholder hiring decision report"""
+    model_config = ConfigDict(extra="forbid")
+
+    individual_decisions: List[StakeholderDecision] = Field(..., min_length=1, max_length=10)
+    consensus_decision: Literal["hire", "no_hire", "needs_discussion"]
+    consensus_confidence: int = Field(..., ge=0, le=100)
+    consensus_reasoning: str = Field(..., min_length=1, max_length=2000)
+    consensus_metrics: ConsensusMetrics
+    final_recommendation: str = Field(..., min_length=1, max_length=1000)
+    session_id: str = Field(..., min_length=1)
+
 class DebriefReport(BaseModel):
     """Complete debrief report"""
     overall_score: int = Field(..., ge=0, le=100)
@@ -121,6 +163,14 @@ class DebriefReport(BaseModel):
 class DebriefResponse(BaseModel):
     """Response for interview debrief"""
     debrief_report: DebriefReport
+    success: bool = True
+    message: Optional[str] = None
+
+class StakeholderResponse(BaseModel):
+    """Response for stakeholder decision"""
+    model_config = ConfigDict(extra="forbid")
+
+    stakeholder_report: StakeholderReport
     success: bool = True
     message: Optional[str] = None
 

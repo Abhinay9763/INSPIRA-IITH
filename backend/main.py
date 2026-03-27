@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from .models.interview import (
     InterviewStartRequest, InterviewStartResponse,
     InterviewTurnRequest, InterviewTurnResponse,
-    DebriefResponse, ErrorResponse
+    DebriefResponse, StakeholderResponse, ErrorResponse
 )
 from .orchestrator import get_orchestrator
 from .config import validate_config, API_HOST, API_PORT
@@ -222,6 +222,44 @@ async def end_interview(
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Failed to end interview: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/interview/stakeholder-decision", response_model=StakeholderResponse)
+async def generate_stakeholder_decision(
+    session_id: str,
+    orchestrator = Depends(get_interview_orchestrator)
+):
+    """
+    Generate multi-stakeholder hiring decision (Stage 3)
+
+    This endpoint:
+    1. Uses existing interview and debrief data from session
+    2. Simulates 4 stakeholder perspectives with different priorities
+    3. Generates individual decisions with detailed reasoning
+    4. Produces weighted consensus decision with discussion simulation
+    5. Returns comprehensive stakeholder report
+    """
+    try:
+        logger.info(f"Generating stakeholder decision for session: {session_id}")
+
+        if not session_id:
+            raise ValueError("Session ID is required")
+
+        stakeholder_report = await orchestrator.run_stage_three_stakeholder_decision(session_id)
+
+        response = StakeholderResponse(
+            stakeholder_report=stakeholder_report,
+            success=True,
+            message="Stakeholder decisions generated successfully"
+        )
+
+        return response
+
+    except ValueError as e:
+        logger.error(f"Invalid stakeholder decision request: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Stakeholder decision failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # === UTILITY ROUTES ===
