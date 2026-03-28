@@ -3,36 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
-
-declare global {
-  interface Window {
-    webkitSpeechRecognition?: {
-      new (): SpeechRecognition
-    }
-    SpeechRecognition?: {
-      new (): SpeechRecognition
-    }
-  }
-}
-
-interface SpeechRecognitionEvent extends Event {
-  results: SpeechRecognitionResultList
-}
-
-interface SpeechRecognitionErrorEvent extends Event {
-  error: string
-}
-
-interface SpeechRecognition extends EventTarget {
-  continuous: boolean
-  interimResults: boolean
-  lang: string
-  onresult: ((event: SpeechRecognitionEvent) => void) | null
-  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null
-  onend: (() => void) | null
-  start: () => void
-  stop: () => void
-}
+import { transcribeWithWhisperWasm } from '../lib/whisper-wasm'
 
 interface VoiceInputProps {
   onSubmit: (message: string) => Promise<void>
@@ -41,15 +12,15 @@ interface VoiceInputProps {
 }
 
 export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInputProps) {
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
-  const silenceTimerRef = useRef<number | null>(null)
+  const recorderRef = useRef<MediaRecorder | null>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
   const [isSupported, setIsSupported] = useState(false)
-  const [isListening, setIsListening] = useState(false)
-  const [statusText, setStatusText] = useState('Press mic to speak')
+  const [isRecording, setIsRecording] = useState(false)
+  const [isTranscribing, setIsTranscribing] = useState(false)
+  const [statusText, setStatusText] = useState('Press REC to record')
   const [textFallback, setTextFallback] = useState('')
-
-  const transcriptBufferRef = useRef('')
 
   useEffect(() => {
     const isLocalhost =
@@ -60,113 +31,112 @@ export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInpu
 
     if (!isSecureAllowed) {
       setIsSupported(false)
-      setStatusText('Voice input requires HTTPS (or localhost). Using text fallback.')
+      setStatusText('Mic recording requires HTTPS (or localhost). Use text fallback.')
       return
     }
 
-    const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition
-    if (!SpeechRecognitionCtor) {
+    if (!navigator.mediaDevices?.getUserMedia || typeof window.MediaRecorder === 'undefined') {
       setIsSupported(false)
-      setStatusText('Browser speech recognition unavailable')
+      setStatusText('Media recorder unavailable in this browser')
       return
     }
 
     setIsSupported(true)
-    const recognition = new SpeechRecognitionCtor()
-    recognition.continuous = true
-    recognition.interimResults = true
-    recognition.lang = 'en-US'
-
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      let latest = ''
-      for (let i = event.results.length - 1; i >= 0; i -= 1) {
-        const alt = event.results[i][0]
-        if (alt?.transcript) {
-          latest = alt.transcript
-          break
-        }
-      }
-
-      transcriptBufferRef.current = latest.trim()
-      if (transcriptBufferRef.current) {
-        setStatusText('Listening...')
-      }
-
-      if (silenceTimerRef.current) {
-        window.clearTimeout(silenceTimerRef.current)
-      }
-
-      silenceTimerRef.current = window.setTimeout(() => {
-        recognition.stop()
-      }, 1500)
-    }
-
-    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
-      setIsListening(false)
-
-      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
-        setIsSupported(false)
-        setStatusText('Microphone permission denied. Using text fallback.')
-        return
-      }
-
-      if (event.error === 'network') {
-        setStatusText('Speech service unavailable. Check connection or use text input.')
-        return
-      }
-
-      setStatusText('Speech capture error, try again')
-    }
-
-    recognition.onend = () => {
-      setIsListening(false)
-
-      if (silenceTimerRef.current) {
-        window.clearTimeout(silenceTimerRef.current)
-        silenceTimerRef.current = null
-      }
-
-      const message = transcriptBufferRef.current.trim()
-      transcriptBufferRef.current = ''
-
-      if (!message || busy) {
-        setStatusText(busy ? 'Processing...' : 'Press mic to speak')
-        return
-      }
-
-      setStatusText('Processing...')
-      void onSubmit(message).finally(() => {
-        setStatusText('Press mic to speak')
-      })
-    }
-
-    recognitionRef.current = recognition
 
     return () => {
-      recognition.stop()
-      recognitionRef.current = null
-      if (silenceTimerRef.current) {
-        window.clearTimeout(silenceTimerRef.current)
+      if (recorderRef.current && recorderRef.current.state !== 'inactive') {
+        recorderRef.current.stop()
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop())
+        streamRef.current = null
       }
     }
-  }, [busy, onSubmit])
+  }, [])
 
-  const startListening = () => {
-    if (!recognitionRef.current || busy) {
+  const detectMimeType = (): string | undefined => {
+    const options = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
+    for (const mimeType of options) {
+      if (MediaRecorder.isTypeSupported(mimeType)) {
+        return mimeType
+      }
+    }
+    return undefined
+  }
+
+  const startRecording = async () => {
+    if (!isSupported || busy || isTranscribing || isRecording) {
       return
     }
 
-    transcriptBufferRef.current = ''
-    setStatusText('Listening...')
-    setIsListening(true)
-
     try {
-      recognitionRef.current.start()
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      streamRef.current = stream
+
+      const mimeType = detectMimeType()
+      const recorder = mimeType
+        ? new MediaRecorder(stream, { mimeType })
+        : new MediaRecorder(stream)
+
+      audioChunksRef.current = []
+
+      recorder.ondataavailable = (event: BlobEvent) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data)
+        }
+      }
+
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: recorder.mimeType || 'audio/webm' })
+        audioChunksRef.current = []
+
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop())
+          streamRef.current = null
+        }
+
+        if (!blob.size || busy) {
+          setStatusText('Press REC to record')
+          return
+        }
+
+        setIsTranscribing(true)
+        void transcribeWithWhisperWasm(blob, (next) => setStatusText(next))
+          .then(async (text) => {
+            if (!text.trim()) {
+              throw new Error('Could not transcribe speech')
+            }
+            setStatusText('Sending response...')
+            await onSubmit(text)
+            setStatusText('Press REC to record')
+          })
+          .catch((error: unknown) => {
+            const message = error instanceof Error ? error.message : 'Transcription failed'
+            setStatusText(message)
+          })
+          .finally(() => {
+            setIsTranscribing(false)
+          })
+      }
+
+      recorderRef.current = recorder
+      recorder.start()
+      setIsRecording(true)
+      setStatusText('Recording... press STOP')
     } catch {
-      setIsListening(false)
-      setStatusText('Could not start microphone. Using text fallback.')
+      setIsRecording(false)
+      setStatusText('Could not access microphone. Use text input.')
       setIsSupported(false)
     }
+  }
+
+  const stopRecording = () => {
+    if (!recorderRef.current || recorderRef.current.state === 'inactive') {
+      return
+    }
+    recorderRef.current.stop()
+    setIsRecording(false)
+    setStatusText('Preparing audio...')
   }
 
   const submitTypedInput = async () => {
@@ -178,7 +148,7 @@ export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInpu
     setStatusText('Processing...')
     setTextFallback('')
     await onSubmit(trimmed)
-    setStatusText('Press mic to speak')
+    setStatusText('Press REC to record')
   }
 
   return (
@@ -186,12 +156,12 @@ export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInpu
       {isSupported ? (
         <button
           type="button"
-          onClick={startListening}
-          disabled={busy}
-          className={`h-10 w-10 border border-ink-primary text-base ${isListening ? 'listening-pulse bg-ink-primary text-accent-white' : ''}`}
-          aria-label="Start voice input"
+          onClick={isRecording ? stopRecording : () => void startRecording()}
+          disabled={busy || isTranscribing}
+          className={`h-10 w-14 border border-ink-primary text-xs ${isRecording ? 'listening-pulse bg-ink-primary text-accent-white' : ''}`}
+          aria-label={isRecording ? 'Stop recording' : 'Start recording'}
         >
-          ●
+          {isRecording ? 'STOP' : 'REC'}
         </button>
       ) : (
         <p className="mono-data text-xs italic" style={{ color: 'var(--ink-muted)' }}>
@@ -203,7 +173,7 @@ export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInpu
         value={textFallback}
         onChange={(event) => setTextFallback(event.target.value)}
         placeholder="Type your answer"
-        disabled={busy}
+        disabled={busy || isTranscribing}
         className="flex-1"
         onKeyDown={(event) => {
           if (event.key === 'Enter' && !event.shiftKey) {
@@ -213,15 +183,15 @@ export default function VoiceInput({ onSubmit, onEndInterview, busy }: VoiceInpu
         }}
       />
 
-      <Button variant="ghost" className="px-3 py-2 text-xs" onClick={() => void submitTypedInput()} disabled={busy || !textFallback.trim()}>
+      <Button variant="ghost" className="px-3 py-2 text-xs" onClick={() => void submitTypedInput()} disabled={busy || isTranscribing || !textFallback.trim()}>
         SEND
       </Button>
 
       <p className="mono-data min-w-[12rem] text-xs italic" style={{ color: 'var(--ink-muted)' }}>
-        {busy ? 'Processing...' : statusText}
+        {busy || isTranscribing ? statusText : statusText}
       </p>
 
-      <Button variant="ghost" className="px-3 py-2 text-xs" onClick={() => void onEndInterview()} disabled={busy}>
+      <Button variant="ghost" className="px-3 py-2 text-xs" onClick={() => void onEndInterview()} disabled={busy || isTranscribing}>
         END INTERVIEW
       </Button>
     </div>
