@@ -1,0 +1,242 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-display: 'Times New Roman', Georgia, serif;
+  --font-mono: 'Courier New', Courier, monospace;
+  --font-ui: 'DM Sans', Inter, sans-serif;
+
+  --background: #f5f0e8;
+  --surface: #ede8dc;
+  --ink-primary: #0a0a0a;
+  --ink-secondary: #3d3d3d;
+  --ink-muted: #888888;
+  --border: #0a0a0a;
+  --border-light: #cccccc;
+  --accent-black: #0a0a0a;
+  --accent-white: #f5f0e8;
+  --positive: #1a5c2a;
+  --concern: #7a1a1a;
+  --muted-rule: #bbbbbb;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  line-height: 1.6;
+  text-rendering: geometricPrecision;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.rule-thin {
+  border-top: 1px solid var(--muted-rule);
+}
+
+.rule-light {
+  border-top: 1px solid var(--border-light);
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-variant: small-caps;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  font-size: 0.7rem;
+}
+
+.display-tight {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.mono-data {
+  font-family: var(--font-mono);
+}
+
+.ui-label {
+  font-family: var(--font-ui-google, var(--font-ui));
+}
+
+.bg-background {
+  background: var(--background);
+}
+
+.bg-surface {
+  background: var(--surface);
+}
+
+.bg-ink-primary {
+  background: var(--ink-primary);
+}
+
+.text-ink-primary {
+  color: var(--ink-primary);
+}
+
+.text-ink-secondary {
+  color: var(--ink-secondary);
+}
+
+.text-ink-muted {
+  color: var(--ink-muted);
+}
+
+.text-accent-white {
+  color: var(--accent-white);
+}
+
+.text-positive {
+  color: var(--positive);
+}
+
+.text-concern {
+  color: var(--concern);
+}
+
+.border-border {
+  border-color: var(--border);
+}
+
+.border-ink-primary {
+  border-color: var(--ink-primary);
+}
+
+.border-border-light {
+  border-color: var(--border-light);
+}
+
+.border-muted-rule {
+  border-color: var(--muted-rule);
+}
+
+.dot-leaders {
+  color: var(--ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 3rem;
+}
+
+.dot-leaders::before {
+  content: '........................................................................................................................';
+}
+
+.input-line {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--ink-primary);
+  background: transparent;
+  color: var(--ink-primary);
+  font-family: var(--font-display);
+  padding: 0.35rem 0;
+  outline: none;
+}
+
+.input-line::placeholder {
+  color: var(--ink-muted);
+}
+
+.btn-core {
+  border: 1px solid var(--ink-primary);
+  border-radius: 0;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.btn-black {
+  background: var(--accent-black);
+  color: var(--accent-white);
+}
+
+.btn-black:disabled {
+  background: var(--border-light);
+  border-color: var(--border-light);
+  color: var(--ink-muted);
+  cursor: not-allowed;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-primary);
+}
+
+.btn-ghost:hover {
+  background: var(--ink-primary);
+  color: var(--accent-white);
+}
+
+.cursor-blink::after {
+  content: '_';
+  margin-left: 0.2rem;
+  animation: blink 1s step-end infinite;
+}
+
+@keyframes blink {
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
+}
+
+.listening-pulse {
+  animation: listeningPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes listeningPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 var(--ink-primary);
+  }
+
+  50% {
+    box-shadow: 0 0 0 2px var(--ink-primary);
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .print-only-content {
+    padding: 0 !important;
+    border: 0 !important;
+    margin: 0 !important;
+  }
+
+  body {
+    background: #ffffff;
+    color: #000000;
+  }
+}

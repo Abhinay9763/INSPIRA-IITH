@@ -5,7 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
-
+.bat
 # Distribution / packaging
 .Python
 build/
@@ -227,13 +227,24 @@ __pycache__/
 *.zip
 *.bak
 
-# Node.js (for future frontend)
+# Node.js frontend
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+.pnpm-debug.log*
 
-# Frontend build artifacts (for future use)
-frontend/build/
-frontend/dist/
-frontend/.next/
+# Next.js
+.next/
+out/
+
+# Build artifacts
+build/
+dist/
+
+# Environment files
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
