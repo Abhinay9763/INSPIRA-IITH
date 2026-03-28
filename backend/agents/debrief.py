@@ -3,6 +3,7 @@ Uses llama-3.3-70b-versatile model"""
 
 import json
 import logging
+import asyncio
 from pathlib import Path
 from typing import Dict, Any, List
 from ..models.interview import (
@@ -10,7 +11,8 @@ from ..models.interview import (
     PhaseBreakdown, AnswerFeedback, ResumeVsReality, StudyRecommendation
 )
 from ..utils.groq_client import get_groq_client
-from ..config import DEBRIEF_MODEL, PROMPTS_DIR
+from ..utils.featherless_client import get_featherless_client
+from ..config import DEBRIEF_MODEL, PROMPTS_DIR, USE_FEATHERLESS_FOR_STRONGER_ANSWERS
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +30,41 @@ class DebriefAgent:
         if self.client is None:
             self.client = get_groq_client()
         return self.client
+
+    async def _rewrite_stronger_answers_with_featherless(
+        self,
+        answer_feedback: List[AnswerFeedback],
+        target_company: str = None,
+        target_role: str = None,
+    ) -> List[AnswerFeedback]:
+        """Optionally refine stronger-answer examples via Featherless."""
+        if not USE_FEATHERLESS_FOR_STRONGER_ANSWERS:
+            return answer_feedback
+
+        featherless = get_featherless_client()
+        if not featherless.is_enabled:
+            logger.info("Featherless API key not set; skipping stronger-answer refinement")
+            return answer_feedback
+
+        async def _rewrite(item: AnswerFeedback) -> None:
+            try:
+                improved = await featherless.generate_stronger_answer(
+                    question=item.question,
+                    candidate_answer_summary=item.candidate_answer_summary,
+                    target_company=target_company,
+                    target_role=target_role,
+                )
+                if improved:
+                    item.stronger_answer_example = improved
+            except Exception as e:
+                logger.warning(f"Featherless stronger-answer rewrite failed, keeping original: {str(e)}")
+
+        # Keep this bounded so debrief latency doesn't spike.
+        tasks = [_rewrite(item) for item in answer_feedback[:6]]
+        if tasks:
+            await asyncio.gather(*tasks)
+
+        return answer_feedback
 
     def _load_prompt(self) -> str:
         """Load the debrief prompt from file"""
@@ -237,6 +274,12 @@ Generate comprehensive debrief following the exact JSON format specified. Be tho
                     resume_gap_flagged=resume_gap_flagged,
                     resume_gap_note=resume_gap_note_value
                 ))
+
+            answer_feedback = await self._rewrite_stronger_answers_with_featherless(
+                answer_feedback,
+                target_company=target_company,
+                target_role=target_role,
+            )
 
             # Parse resume vs reality with validation
             resume_vs_reality = []

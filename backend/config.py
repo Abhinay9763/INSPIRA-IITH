@@ -16,6 +16,12 @@ load_dotenv(dotenv_path=env_path)
 # Environment Variables
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")  # Required for Stage 1 only
+FEATHERLESS_API_KEY = os.getenv("FEATHERLESS_API_KEY", "")
+FEATHERLESS_BASE_URL = os.getenv("FEATHERLESS_BASE_URL", "https://api.featherless.ai/v1")
+FEATHERLESS_STRONGER_ANSWER_MODEL = os.getenv("FEATHERLESS_STRONGER_ANSWER_MODEL", "meta-llama/Meta-Llama-3.1-8B-Instruct")
+USE_FEATHERLESS_FOR_STRONGER_ANSWERS = os.getenv("USE_FEATHERLESS_FOR_STRONGER_ANSWERS", "true").strip().lower() in {
+    "1", "true", "yes", "on"
+}
 
 # === STAGE 1 MODEL CONFIGURATION (Resume Analysis) ===
 RESUME_ANALYST_MODEL = "llama-3.3-70b-versatile"
