@@ -23,10 +23,10 @@ SCORING_AGENT_MODEL = "llama-3.3-70b-versatile"
 README_SCORER_MODEL = "llama-3.1-8b-instant"
 
 # === STAGE 2 MODEL CONFIGURATION (Interview) ===
-INTERVIEWER_MODEL = "llama-3.1-8b-instant"  # Fast model for real-time conversation
-QUESTION_GEN_MODEL = "llama-3.3-70b-versatile"  # High capability for question generation
-DEBRIEF_MODEL = "llama-3.3-70b-versatile"  # High capability for analysis
-STAKEHOLDER_MODEL = "llama-3.3-70b-versatile"  # High capability for stakeholder analysis
+INTERVIEWER_MODEL = os.getenv("INTERVIEWER_MODEL", "llama-3.1-8b-instant")  # Fast model for real-time conversation
+QUESTION_GEN_MODEL = os.getenv("QUESTION_GEN_MODEL", "llama-3.3-70b-versatile")  # High capability for question generation
+DEBRIEF_MODEL = os.getenv("DEBRIEF_MODEL", "llama-3.3-70b-versatile")  # High capability for analysis
+STAKEHOLDER_MODEL = os.getenv("STAKEHOLDER_MODEL", "llama-3.1-8b-instant")  # Lower-latency default to reduce rate-limit failures
 
 # === STAGE 1 CONSTANTS (Resume Analysis) ===
 

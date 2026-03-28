@@ -18,12 +18,12 @@ from .agents.scorer import scoring_agent
 # Stage 2 Imports
 from .models.interview import (
     InterviewState, ConversationTurn, InterviewPhase,
-    QuestionBank, DebriefReport, StakeholderType, StakeholderReport
+    QuestionBank, DebriefReport, StakeholderType, StakeholderReport, StakeholderDecision
 )
 from .agents.question_generator import get_question_generator
 from .agents.interviewer import get_interviewer_agent
 from .agents.debrief import get_debrief_agent
-from .agents.stakeholder import get_stakeholder_agent
+from .agents.stakeholder import get_stakeholder_agent, STAKEHOLDER_WEIGHTS
 
 logger = logging.getLogger(__name__)
 
@@ -563,6 +563,10 @@ class InterviewOrchestrator:
         Returns:
             StakeholderReport with individual decisions and consensus
         """
+        def _is_rate_limit_error(error: Exception) -> bool:
+            msg = str(error).lower()
+            return '429' in msg or 'rate limit' in msg or 'too many requests' in msg
+
         try:
             logger.info(f"Starting Stage 3 stakeholder decision for session {session_id}")
 
@@ -596,26 +600,63 @@ class InterviewOrchestrator:
             logger.info(f"Generating {len(stakeholder_types)} individual stakeholder decisions...")
 
             for stakeholder_type in stakeholder_types:
-                decision = await self.stakeholder_agent.generate_stakeholder_decision(
-                    stakeholder_type,
-                    debrief_report,
-                    interview_state.candidate_profile,
-                    interview_state.full_conversation_history,
-                    interview_state.target_company,
-                    interview_state.target_role
-                )
+                try:
+                    decision = await self.stakeholder_agent.generate_stakeholder_decision(
+                        stakeholder_type,
+                        debrief_report,
+                        interview_state.candidate_profile,
+                        interview_state.full_conversation_history,
+                        interview_state.target_company,
+                        interview_state.target_role
+                    )
+                except Exception as e:
+                    if not _is_rate_limit_error(e):
+                        raise
+
+                    logger.warning(
+                        f"{stakeholder_type.value} decision hit rate limit, using deterministic fallback: {str(e)}"
+                    )
+
+                    strengths = [
+                        "Strong fit signals from interview interactions",
+                        "Demonstrated relevant technical foundation",
+                        "Shows potential for role growth"
+                    ]
+                    concerns = [
+                        "Decision generated under API rate-limit fallback",
+                        "Recommend follow-up round for higher confidence"
+                    ]
+
+                    final_assessment = getattr(debrief_report, 'final_assessment', None) or {}
+                    if isinstance(final_assessment, dict):
+                        fallback_strengths = final_assessment.get('strengths')
+                        fallback_concerns = final_assessment.get('areas_for_improvement')
+                        if isinstance(fallback_strengths, list) and fallback_strengths:
+                            strengths = [str(item) for item in fallback_strengths[:3]]
+                        if isinstance(fallback_concerns, list) and fallback_concerns:
+                            concerns = [str(item) for item in fallback_concerns[:3]]
+
+                    decision = StakeholderDecision(
+                        stakeholder_type=stakeholder_type,
+                        decision='borderline',
+                        confidence_score=55,
+                        reasoning=(
+                            "Fallback decision produced because stakeholder model requests were rate-limited. "
+                            "This conservative decision should be revisited when model capacity is available."
+                        ),
+                        key_strengths=strengths,
+                        key_concerns=concerns,
+                        vote_weight=STAKEHOLDER_WEIGHTS.get(stakeholder_type.value, 0.25)
+                    )
+
                 individual_decisions.append(decision)
                 logger.info(f"{stakeholder_type.value} decision: {decision.decision}")
 
             # Generate consensus decision
             logger.info("Generating consensus decision...")
-            stakeholder_report = await self.stakeholder_agent.generate_consensus(
+            stakeholder_report = self.stakeholder_agent.generate_local_consensus(
                 individual_decisions,
-                debrief_report,
-                interview_state.candidate_profile,
-                session_id,
-                interview_state.target_company,
-                interview_state.target_role
+                session_id
             )
 
             logger.info(f"Stakeholder decision completed: {stakeholder_report.consensus_decision} (confidence: {stakeholder_report.consensus_confidence}%)")

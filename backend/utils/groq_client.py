@@ -23,7 +23,9 @@ class GroqClient:
             raise ValueError("GROQ_API_KEY environment variable is required")
 
         validate_config()
-        self.client = Groq(api_key=GROQ_API_KEY)
+        # Disable SDK auto-retries to avoid long hidden backoff delays (20-40s).
+        # We implement explicit short retries in chat_completion instead.
+        self.client = Groq(api_key=GROQ_API_KEY, max_retries=0)
         self._client = self.client  # Stage 2 compatibility
         logger.info("Groq client initialized successfully")
 
@@ -156,19 +158,37 @@ class GroqClient:
         Returns:
             Chat completion response
         """
-        try:
-            response = self._client.chat.completions.create(
-                model=model,
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                **kwargs
-            )
-            logger.debug(f"Chat completion successful for model {model}")
-            return response
-        except Exception as e:
-            logger.error(f"Chat completion failed for model {model}: {str(e)}")
-            raise
+        def _is_rate_limit_error(error: Exception) -> bool:
+            message = str(error).lower()
+            return '429' in message or 'rate limit' in message or 'too many requests' in message
+
+        max_attempts = 3
+        backoff_seconds = [1, 2, 4]
+        last_error = None
+
+        for attempt in range(max_attempts):
+            try:
+                response = self._client.chat.completions.create(
+                    model=model,
+                    messages=messages,
+                    temperature=temperature,
+                    max_tokens=max_tokens,
+                    **kwargs
+                )
+                logger.debug(f"Chat completion successful for model {model}")
+                return response
+            except Exception as e:
+                last_error = e
+                if _is_rate_limit_error(e) and attempt < max_attempts - 1:
+                    wait_seconds = backoff_seconds[attempt]
+                    logger.warning(f"Rate limited on model {model}, retrying in {wait_seconds}s (attempt {attempt + 1}/{max_attempts})")
+                    await asyncio.sleep(wait_seconds)
+                    continue
+
+                logger.error(f"Chat completion failed for model {model}: {str(e)}")
+                raise
+
+        raise last_error if last_error else RuntimeError('Unknown chat completion failure')
 
     def test_connection(self) -> bool:
         """Test the connection to Groq API (Stage 2 method)"""

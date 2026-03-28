@@ -681,6 +681,100 @@ Generate the consensus decision and analysis following the exact JSON format spe
             logger.error(f"Consensus generation failed: {str(e)}")
             raise
 
+    def generate_local_consensus(
+        self,
+        individual_decisions: List[StakeholderDecision],
+        session_id: str
+    ) -> StakeholderReport:
+        """
+        Generate deterministic consensus without an additional LLM call.
+        This is used to reduce latency and rate-limit pressure in Stage 3.
+        """
+        if not individual_decisions:
+            return StakeholderReport(
+                individual_decisions=[],
+                consensus_decision="needs_discussion",
+                consensus_confidence=0,
+                consensus_reasoning="No stakeholder decisions were available for consensus.",
+                consensus_metrics=ConsensusMetrics(
+                    agreement_level=0,
+                    discussion_points=["Stakeholder decisions unavailable"],
+                    compromise_areas=[]
+                ),
+                final_recommendation="Re-run stakeholder review once sufficient evidence is available.",
+                session_id=session_id
+            )
+
+        vote_map = {"hire": 1, "borderline": 0, "no_hire": -1}
+        weighted_score = 0.0
+        weight_total = 0.0
+        weighted_confidence = 0.0
+
+        for decision in individual_decisions:
+            weight = STAKEHOLDER_WEIGHTS.get(decision.stakeholder_type.value, 0.25)
+            vote = vote_map.get(decision.decision, 0)
+            weighted_score += vote * weight
+            weighted_confidence += decision.confidence_score * weight
+            weight_total += weight
+
+        if weight_total > 0:
+            weighted_score /= weight_total
+            weighted_confidence /= weight_total
+
+        if weighted_score >= 0.25:
+            consensus_decision = "hire"
+        elif weighted_score <= -0.25:
+            consensus_decision = "no_hire"
+        else:
+            consensus_decision = "needs_discussion"
+
+        counts = {"hire": 0, "no_hire": 0, "borderline": 0}
+        for decision in individual_decisions:
+            counts[decision.decision] = counts.get(decision.decision, 0) + 1
+
+        max_vote_count = max(counts.values()) if counts else 0
+        agreement_level = int((max_vote_count / max(1, len(individual_decisions))) * 100)
+
+        top_strengths: List[str] = []
+        top_concerns: List[str] = []
+        for decision in individual_decisions:
+            top_strengths.extend(decision.key_strengths[:1])
+            top_concerns.extend(decision.key_concerns[:1])
+
+        discussion_points = [
+            f"Vote split: hire={counts['hire']}, no_hire={counts['no_hire']}, borderline={counts['borderline']}",
+            f"Weighted confidence: {int(weighted_confidence)}%",
+        ]
+        discussion_points.extend(top_concerns[:3])
+
+        compromise_areas = top_concerns[:2] if counts["hire"] > 0 and counts["no_hire"] > 0 else []
+
+        consensus_reasoning = (
+            "Consensus generated using weighted stakeholder votes and confidence levels. "
+            f"The panel produced a {consensus_decision.replace('_', ' ')} outcome with {agreement_level}% agreement."
+        )
+
+        if consensus_decision == "hire":
+            final_recommendation = "Proceed to next hiring stage with targeted follow-up on noted concerns."
+        elif consensus_decision == "no_hire":
+            final_recommendation = "Do not proceed at this time; recommend a structured study plan before re-application."
+        else:
+            final_recommendation = "Run an additional technical round focused on identified compromise areas."
+
+        return StakeholderReport(
+            individual_decisions=individual_decisions,
+            consensus_decision=consensus_decision,
+            consensus_confidence=int(max(0, min(100, round(weighted_confidence)))),
+            consensus_reasoning=consensus_reasoning,
+            consensus_metrics=ConsensusMetrics(
+                agreement_level=max(0, min(100, agreement_level)),
+                discussion_points=discussion_points[:10],
+                compromise_areas=compromise_areas[:10]
+            ),
+            final_recommendation=final_recommendation,
+            session_id=session_id
+        )
+
 # Global instance
 _stakeholder_agent = None
 

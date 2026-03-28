@@ -3,8 +3,9 @@ Uses llama-3.3-70b-versatile model"""
 
 import json
 import logging
+import re
 from pathlib import Path
-from typing import Dict, Any
+from typing import Dict, Any, List
 from ..models.interview import QuestionBank, Question, QuestionCategory, QuestionDifficulty
 from ..utils.groq_client import get_groq_client
 from ..config import QUESTION_GEN_MODEL, PROMPTS_DIR, get_seniority_level, INTERVIEW_FLAVORS
@@ -97,6 +98,143 @@ Return ONLY a valid JSON object with no additional text."""
 
         return detailed_prompt
 
+    def _extract_json_from_response(self, response_text: str) -> Dict[str, Any]:
+        """Extract JSON from noisy LLM output (markdown, prefixes, trailing prose)."""
+        text = (response_text or "").strip()
+        if not text:
+            return {}
+
+        candidates: List[str] = []
+
+        # Markdown JSON block
+        if "```json" in text:
+            start = text.find("```json") + 7
+            end = text.find("```", start)
+            if end != -1:
+                candidates.append(text[start:end].strip())
+
+        # Generic markdown block
+        if "```" in text and "```json" not in text:
+            start = text.find("```") + 3
+            end = text.find("```", start)
+            if end != -1:
+                candidates.append(text[start:end].strip())
+
+        # First top-level JSON object
+        obj_match = re.search(r"\{[\s\S]*\}", text)
+        if obj_match:
+            candidates.append(obj_match.group(0).strip())
+
+        # Raw text fallback
+        candidates.append(text)
+
+        for candidate in candidates:
+            if not candidate:
+                continue
+            try:
+                parsed = json.loads(candidate)
+                if isinstance(parsed, dict):
+                    return parsed
+            except Exception:
+                continue
+
+        return {}
+
+    def _normalize_category(self, value: Any) -> QuestionCategory:
+        """Normalize category values from common LLM variants."""
+        raw = str(value or "").strip().lower().replace("_", "").replace(" ", "")
+        mapping = {
+            "dsa": QuestionCategory.DSA,
+            "systemdesign": QuestionCategory.SYSTEM_DESIGN,
+            "behavioral": QuestionCategory.BEHAVIORAL,
+            "resumedeepdive": QuestionCategory.RESUME_DEEP_DIVE,
+            "resume": QuestionCategory.RESUME_DEEP_DIVE,
+        }
+        return mapping.get(raw, QuestionCategory.BEHAVIORAL)
+
+    def _normalize_difficulty(self, value: Any) -> QuestionDifficulty:
+        """Normalize difficulty values from common LLM variants."""
+        raw = str(value or "").strip().lower()
+        mapping = {
+            "easy": QuestionDifficulty.EASY,
+            "medium": QuestionDifficulty.MEDIUM,
+            "hard": QuestionDifficulty.HARD,
+        }
+        return mapping.get(raw, QuestionDifficulty.MEDIUM)
+
+    def _fallback_question_bank(self, seniority_level: str) -> QuestionBank:
+        """Deterministic fallback question bank if LLM JSON is invalid."""
+        fallback_questions = [
+            Question(
+                question_text="Walk me through one project you built and your exact ownership in it.",
+                category=QuestionCategory.RESUME_DEEP_DIVE,
+                difficulty=QuestionDifficulty.EASY,
+                talking_points=["scope", "personal contribution", "tradeoffs"],
+                follow_up_questions=["What would you redesign now?"]
+            ),
+            Question(
+                question_text="Explain a production bug you debugged recently and how you isolated root cause.",
+                category=QuestionCategory.BEHAVIORAL,
+                difficulty=QuestionDifficulty.MEDIUM,
+                talking_points=["diagnosis", "instrumentation", "mitigation"],
+                follow_up_questions=["How did you prevent recurrence?"]
+            ),
+            Question(
+                question_text="Given an array of integers, return indices of two numbers that add to a target.",
+                category=QuestionCategory.DSA,
+                difficulty=QuestionDifficulty.EASY,
+                talking_points=["hash map", "time complexity"],
+                follow_up_questions=["How does this change for sorted arrays?"]
+            ),
+            Question(
+                question_text="Design a URL shortener service and discuss scaling bottlenecks.",
+                category=QuestionCategory.SYSTEM_DESIGN,
+                difficulty=QuestionDifficulty.MEDIUM,
+                talking_points=["id generation", "read/write paths", "storage"],
+                follow_up_questions=["How would you handle hot keys?"]
+            ),
+            Question(
+                question_text="Describe a time you disagreed with a technical decision and how you resolved it.",
+                category=QuestionCategory.BEHAVIORAL,
+                difficulty=QuestionDifficulty.MEDIUM,
+                talking_points=["communication", "evidence", "outcome"],
+                follow_up_questions=["What did you learn from that conflict?"]
+            ),
+            Question(
+                question_text="Implement LRU cache with O(1) get and put operations.",
+                category=QuestionCategory.DSA,
+                difficulty=QuestionDifficulty.HARD,
+                talking_points=["doubly linked list", "hash map", "eviction"],
+                follow_up_questions=["How would you make it thread-safe?"]
+            ),
+            Question(
+                question_text="Tell me about your strongest and weakest resume claim after this interview.",
+                category=QuestionCategory.RESUME_DEEP_DIVE,
+                difficulty=QuestionDifficulty.MEDIUM,
+                talking_points=["self-assessment", "evidence", "growth plan"],
+                follow_up_questions=["What skill would you prioritize next month?"]
+            ),
+            Question(
+                question_text="Design a notification system that supports email, SMS, and push delivery.",
+                category=QuestionCategory.SYSTEM_DESIGN,
+                difficulty=QuestionDifficulty.HARD,
+                talking_points=["queues", "retry", "idempotency"],
+                follow_up_questions=["How would you track delivery guarantees?"]
+            ),
+        ]
+
+        category_distribution: Dict[str, int] = {}
+        for question in fallback_questions:
+            cat = question.category.value
+            category_distribution[cat] = category_distribution.get(cat, 0) + 1
+
+        return QuestionBank(
+            questions=fallback_questions,
+            seniority_level=seniority_level,
+            total_questions=len(fallback_questions),
+            category_distribution=category_distribution
+        )
+
     async def generate_question_bank(
         self,
         candidate_profile: Dict[str, Any],
@@ -146,14 +284,12 @@ Return ONLY a valid JSON object with no additional text."""
             response_text = response.choices[0].message.content.strip()
             logger.info(f"Response text length: {len(response_text)} chars")
 
-            # Clean up response if it has markdown formatting
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
+            logger.info("Extracting JSON response...")
+            response_json = self._extract_json_from_response(response_text)
+            if not response_json:
+                logger.warning("Question generator returned non-parseable JSON. Using fallback question bank.")
+                return self._fallback_question_bank(seniority_level)
 
-            logger.info("Parsing JSON response...")
-            response_json = json.loads(response_text)
             logger.info(f"JSON parsed successfully, has {len(response_json.get('questions', []))} questions")
 
             # Convert to our models
@@ -163,12 +299,16 @@ Return ONLY a valid JSON object with no additional text."""
             for q_data in response_json.get("questions", []):
                 try:
                     question = Question(
-                        question_text=q_data["question_text"],
-                        category=QuestionCategory(q_data["category"]),
-                        difficulty=QuestionDifficulty(q_data["difficulty"]),
+                        question_text=str(q_data.get("question_text", "")).strip(),
+                        category=self._normalize_category(q_data.get("category")),
+                        difficulty=self._normalize_difficulty(q_data.get("difficulty")),
                         talking_points=q_data.get("talking_points", []),
                         follow_up_questions=q_data.get("follow_up_questions", [])
                     )
+
+                    if not question.question_text:
+                        raise ValueError("question_text missing")
+
                     questions.append(question)
 
                     # Count categories
@@ -180,6 +320,10 @@ Return ONLY a valid JSON object with no additional text."""
                     continue
 
             # Create question bank
+            if not questions:
+                logger.warning("No valid questions parsed from LLM output. Using fallback question bank.")
+                return self._fallback_question_bank(seniority_level)
+
             question_bank = QuestionBank(
                 questions=questions,
                 seniority_level=seniority_level,
@@ -195,7 +339,7 @@ Return ONLY a valid JSON object with no additional text."""
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse LLM response as JSON: {e}")
             logger.error(f"Response text: {response_text}")
-            raise Exception("Invalid JSON response from question generator")
+            return self._fallback_question_bank(seniority_level)
 
         except Exception as e:
             logger.error(f"Question generation failed: {str(e)}")

@@ -414,8 +414,14 @@ async def generate_stakeholder_decision(
         logger.error(f"Invalid stakeholder decision request: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
-        logger.error(f"Stakeholder decision failed: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        error_text = str(e)
+        logger.error(f"Stakeholder decision failed: {error_text}")
+
+        lowered = error_text.lower()
+        if '429' in lowered or 'rate limit' in lowered or 'too many requests' in lowered:
+            raise HTTPException(status_code=429, detail="Stakeholder decision is rate-limited right now. Please retry in a minute.")
+
+        raise HTTPException(status_code=500, detail=error_text)
 
 # === UTILITY ROUTES (Stage 2) ===
 
