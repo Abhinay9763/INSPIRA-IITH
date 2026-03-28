@@ -36,7 +36,11 @@ export default function ResultsPage() {
     setAnalysis(data)
   }, [router])
 
-  const score = useMemo(() => Math.max(0, Math.min(50, Math.round(analysis?.score_breakdown?.overall_score || 0))), [analysis])
+  const score = useMemo(() => {
+    const raw = analysis?.score_breakdown?.overall_score || 0
+    const clamped = Math.max(0, Math.min(10, raw))
+    return Math.round(clamped * 10) / 10
+  }, [analysis])
 
   if (!analysis) {
     return <div className="min-h-screen bg-background" />
@@ -58,7 +62,7 @@ export default function ResultsPage() {
                 borderRadius: '2px',
               }}
             >
-              {score}
+              {score}/10
             </span>
           </div>
         </div>

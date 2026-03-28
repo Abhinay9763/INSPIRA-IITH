@@ -21,6 +21,129 @@ class ScoringAgent:
     """Agent for comprehensive candidate evaluation and scoring."""
 
     @staticmethod
+    def _infer_role_level(target_role: str) -> str:
+        """Infer role seniority level from target role title."""
+        role = (target_role or '').lower()
+
+        junior_markers = ['intern', 'internship', 'student', 'entry', 'junior', 'fresher', 'new grad']
+        senior_markers = ['staff', 'principal', 'lead', 'architect', 'senior']
+
+        if any(marker in role for marker in junior_markers):
+            return 'early'
+        if any(marker in role for marker in senior_markers):
+            return 'senior'
+        return 'mid'
+
+    @staticmethod
+    def _get_role_weights(role_level: str) -> Dict[str, float]:
+        """Return role-aware scoring weights."""
+        if role_level == 'early':
+            # Early-career roles should focus on potential, projects, and learning agility.
+            return {
+                'technical_skills': 0.30,
+                'project_quality': 0.30,
+                'github_activity': 0.15,
+                'experience_depth': 0.10,
+                'communication': 0.15,
+            }
+
+        if role_level == 'senior':
+            return {
+                'technical_skills': 0.25,
+                'project_quality': 0.20,
+                'github_activity': 0.15,
+                'experience_depth': 0.30,
+                'communication': 0.10,
+            }
+
+        # Mid-level defaults to configured rubric.
+        return WEIGHTS
+
+    @staticmethod
+    def _calibrate_scores_for_role(
+        raw_scores: Dict[str, float],
+        role_level: str,
+        candidate_profile: CandidateProfile,
+        github_signals: Optional[GitHubSignals],
+    ) -> Dict[str, float]:
+        """
+        Apply deterministic guardrails so intern/junior candidates are not unfairly penalized.
+        """
+        scores = dict(raw_scores)
+
+        if role_level != 'early':
+            return scores
+
+        project_count = len(candidate_profile.projects or [])
+        has_any_experience = len(candidate_profile.experience or []) > 0
+        public_repos = github_signals.public_repos if github_signals else 0
+        has_readme_signal = bool(
+            github_signals and any(repo.readme_score is not None for repo in github_signals.repositories)
+        )
+
+        # For interns, lack of full-time experience should not collapse score if projects exist.
+        if not has_any_experience and project_count >= 3:
+            scores['experience_depth'] = max(3.5, float(scores.get('experience_depth', 0.0)))
+
+        # For early-career GitHub activity, stars/followers are weak signals.
+        if public_repos >= 4 and has_readme_signal:
+            scores['github_activity'] = max(4.0, float(scores.get('github_activity', 0.0)))
+
+        return scores
+
+    @staticmethod
+    def _balance_overall_for_role(
+        score_breakdown: ScoreBreakdown,
+        role_level: str,
+        candidate_profile: CandidateProfile,
+    ) -> ScoreBreakdown:
+        """Keep early-career outcomes realistic and balanced for project-heavy profiles."""
+        if role_level != 'early':
+            return score_breakdown
+
+        project_count = len(candidate_profile.projects or [])
+        skills_count = len(candidate_profile.skills or [])
+        has_any_experience = len(candidate_profile.experience or []) > 0
+
+        # For intern candidates with clear project evidence, avoid extreme outcomes.
+        if project_count >= 5 and skills_count >= 8 and not has_any_experience:
+            score_breakdown.overall_score = max(5.5, min(6.8, float(score_breakdown.overall_score)))
+
+        return score_breakdown
+
+    @staticmethod
+    def _sanitize_signals_for_role(
+        role_level: str,
+        strong_signals: List[str],
+        weak_signals: List[str],
+    ) -> tuple[List[str], List[str]]:
+        """Reduce speculative wording and keep feedback evidence-based."""
+        cleaned_strong: List[str] = []
+        for signal in strong_signals or []:
+            text = str(signal).strip()
+            if text and text not in cleaned_strong:
+                cleaned_strong.append(text)
+
+        cleaned_weak: List[str] = []
+        for signal in weak_signals or []:
+            text = str(signal).strip()
+            lowered = text.lower()
+
+            if role_level == 'early':
+                if 'impact ability to work in a team' in lowered:
+                    text = 'Limited formal industry collaboration evidence in the provided profile.'
+                elif 'followers' in lowered or 'stars' in lowered:
+                    text = 'Limited external GitHub validation (stars/followers), so practical depth should be verified in interview rounds.'
+                elif 'lack of experience' in lowered or 'no experience' in lowered:
+                    text = 'Limited formal industry experience (expected for intern-level candidates).'
+
+            if text and text not in cleaned_weak:
+                cleaned_weak.append(text)
+
+        # Keep output concise for UI and pitch clarity.
+        return cleaned_strong[:5], cleaned_weak[:5]
+
+    @staticmethod
     async def score_candidate(
         candidate_profile: CandidateProfile,
         github_signals: Optional[GitHubSignals],
@@ -50,8 +173,33 @@ class ScoringAgent:
             # Get LLM evaluation
             evaluation = await ScoringAgent._get_llm_evaluation(analysis_data)
 
+            role_level = ScoringAgent._infer_role_level(target_role)
+
+            # Apply role-aware calibration before weighted scoring.
+            calibrated = ScoringAgent._calibrate_scores_for_role(
+                evaluation['score_breakdown'],
+                role_level,
+                candidate_profile,
+                github_signals,
+            )
+
             # Calculate weighted overall score
-            score_breakdown = ScoringAgent._create_score_breakdown(evaluation['score_breakdown'])
+            score_breakdown = ScoringAgent._create_score_breakdown(
+                calibrated,
+                role_level=role_level,
+            )
+
+            score_breakdown = ScoringAgent._balance_overall_for_role(
+                score_breakdown,
+                role_level,
+                candidate_profile,
+            )
+
+            strong_signals, weak_signals = ScoringAgent._sanitize_signals_for_role(
+                role_level,
+                evaluation.get('strong_signals', []),
+                evaluation.get('weak_signals', []),
+            )
 
             # Parse interview threads
             interview_threads = [
@@ -65,8 +213,8 @@ class ScoringAgent:
                 target_company=target_company,
                 target_role=target_role,
                 score_breakdown=score_breakdown,
-                strong_signals=evaluation.get('strong_signals', []),
-                weak_signals=evaluation.get('weak_signals', []),
+                strong_signals=strong_signals,
+                weak_signals=weak_signals,
                 interview_threads=interview_threads,
                 analysis_date=datetime.now().isoformat()
             )
@@ -213,7 +361,7 @@ Top Repositories ({len(github_signals.repositories)} analyzed):
             }
 
     @staticmethod
-    def _create_score_breakdown(score_data: Dict[str, float]) -> ScoreBreakdown:
+    def _create_score_breakdown(score_data: Dict[str, float], role_level: str = 'mid') -> ScoreBreakdown:
         """
         Create ScoreBreakdown with weighted overall score.
 
@@ -230,13 +378,15 @@ Top Repositories ({len(github_signals.repositories)} analyzed):
         experience_depth = max(0.0, min(10.0, score_data.get('experience_depth', 5.0)))
         communication = max(0.0, min(10.0, score_data.get('communication', 5.0)))
 
+        weights = ScoringAgent._get_role_weights(role_level)
+
         # Calculate weighted overall score
         overall_score = (
-            technical_skills * WEIGHTS['technical_skills'] +
-            project_quality * WEIGHTS['project_quality'] +
-            github_activity * WEIGHTS['github_activity'] +
-            experience_depth * WEIGHTS['experience_depth'] +
-            communication * WEIGHTS['communication']
+            technical_skills * weights['technical_skills'] +
+            project_quality * weights['project_quality'] +
+            github_activity * weights['github_activity'] +
+            experience_depth * weights['experience_depth'] +
+            communication * weights['communication']
         )
 
         overall_score = max(0.0, min(10.0, overall_score))

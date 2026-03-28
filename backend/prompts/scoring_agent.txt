@@ -37,6 +37,24 @@ EVALUATION CRITERIA (Score each 0-10):
 - Professional online presence
 - Ability to articulate technical concepts
 
+ROLE-AWARE SCORING RULES (CRITICAL):
+- Infer role level from target role title.
+- If role is intern/junior/entry-level:
+  - Evaluate for POTENTIAL and execution evidence, not years of full-time experience.
+  - Low followers/stars should be a minor signal, not a major penalty.
+  - Multiple meaningful projects should raise project_quality and partially support experience_depth.
+  - Do NOT heavily punish a student for missing corporate work history.
+- If role is mid/senior:
+  - Increase importance of experience depth, production ownership, and leadership scope.
+
+SCORING CALIBRATION RULES:
+- Score using evidence present in the provided data only.
+- Avoid extreme low scores (<3) unless there is clear, repeated negative evidence.
+- For intern/junior candidates with strong project evidence, keep overall score in a realistic band (typically 4.5-7.5).
+- Ensure strong_signals and weak_signals are specific, non-generic, and directly tied to provided evidence.
+- Do NOT make speculative claims (e.g., "will struggle in teams") without explicit evidence.
+- Phrase early-career weaknesses as development opportunities, not disqualifying flaws.
+
 ADDITIONAL ANALYSIS:
 - Identify 3-5 strongest positive signals
 - Identify 3-5 areas of concern or weakness

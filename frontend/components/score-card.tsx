@@ -13,11 +13,11 @@ const DIMENSIONS: Array<{ key: keyof Omit<ScoreBreakdown, 'overall_score'>; labe
 ]
 
 function interpretation(score: number): string {
-  if (score >= 35) {
+  if (score >= 7) {
     return 'STRONG CANDIDATE'
   }
 
-  if (score >= 20) {
+  if (score >= 5) {
     return 'MODERATE FIT'
   }
 
@@ -30,6 +30,14 @@ function clampScore(value: number): number {
   }
 
   return Math.max(0, Math.min(10, Math.round(value)))
+}
+
+function clampDisplayScore(value: number): number {
+  if (Number.isNaN(value)) {
+    return 0
+  }
+
+  return Math.max(0, Math.min(10, Math.round(value * 10) / 10))
 }
 
 function renderSquares(score: number): JSX.Element {
@@ -57,10 +65,10 @@ function renderSquares(score: number): JSX.Element {
 }
 
 function ScoreRing({ score }: { score: number }) {
-  const normalized = Math.max(0, Math.min(50, Math.round(score)))
+  const normalized = Math.max(0, Math.min(10, score))
   const radius = 36
   const circumference = 2 * Math.PI * radius
-  const offset = circumference - (normalized / 50) * circumference
+  const offset = circumference - (normalized / 10) * circumference
 
   return (
     <svg width="92" height="92" viewBox="0 0 92 92" role="img" aria-label="Overall score ring">
@@ -81,7 +89,7 @@ function ScoreRing({ score }: { score: number }) {
 }
 
 export default function ScoreCard({ scoreBreakdown }: ScoreCardProps) {
-  const overall = Math.max(0, Math.min(50, Math.round(scoreBreakdown.overall_score || 0)))
+  const overall = clampDisplayScore(scoreBreakdown.overall_score || 0)
 
   return (
     <section>
@@ -91,7 +99,7 @@ export default function ScoreCard({ scoreBreakdown }: ScoreCardProps) {
         <div>
           <p className="mono-data text-6xl leading-none">{overall}</p>
           <p className="mono-data text-base" style={{ color: 'var(--ink-secondary)' }}>
-            /50
+            /10
           </p>
           <p className="section-label mt-2" style={{ color: 'var(--ink-primary)' }}>
             {interpretation(overall)}
