@@ -23,7 +23,7 @@ from .models.interview import (
 from .agents.question_generator import get_question_generator
 from .agents.interviewer import get_interviewer_agent
 from .agents.debrief import get_debrief_agent
-from .agents.stakeholder import get_stakeholder_agent, STAKEHOLDER_WEIGHTS
+from .agents.stakeholder import get_stakeholder_agent
 
 logger = logging.getLogger(__name__)
 
@@ -645,8 +645,7 @@ class InterviewOrchestrator:
                             "This conservative decision should be revisited when model capacity is available."
                         ),
                         key_strengths=strengths,
-                        key_concerns=concerns,
-                        vote_weight=STAKEHOLDER_WEIGHTS.get(stakeholder_type.value, 0.25)
+                        key_concerns=concerns
                     )
 
                 individual_decisions.append(decision)
