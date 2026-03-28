@@ -29,6 +29,21 @@ function toMmSs(seconds: number): string {
   return `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
 }
 
+function normalizeCandidateIntro(message: string, candidateName?: string): string {
+  const text = message.trim()
+  if (!text) {
+    return text
+  }
+
+  const name = (candidateName || '').trim()
+  if (!name) {
+    return text
+  }
+
+  // Cheeky demo hack: replace speech-recognition "I am / I'm" opener with candidate name.
+  return text.replace(/^(i\s*am|i['’]?m)\s+/i, `${name} `)
+}
+
 async function playBase64Audio(audioBase64: string): Promise<void> {
   if (!audioBase64) {
     return
@@ -127,9 +142,11 @@ export default function InterviewPage() {
 
     setBusy(true)
 
+    const normalizedMessage = normalizeCandidateIntro(message, analysis?.candidate_profile?.name)
+
     const candidateTurn: InterviewTurn = {
       speaker: 'candidate',
-      text: message.trim(),
+      text: normalizedMessage,
       timestamp: nowIso(),
     }
 
@@ -137,7 +154,7 @@ export default function InterviewPage() {
     appendInterviewTurn(candidateTurn)
 
     try {
-      const response = await sendInterviewTurn(message.trim(), sessionId)
+      const response = await sendInterviewTurn(normalizedMessage, sessionId)
       setCurrentPhase(Math.max(1, Math.min(4, response.current_phase || 1)))
 
       const interviewerTurn: InterviewTurn = {

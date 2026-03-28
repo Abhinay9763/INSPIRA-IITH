@@ -4,6 +4,8 @@ Coordinates all agents and manages the complete analysis workflow for the AI Int
 """
 
 import logging
+import asyncio
+import re
 from datetime import datetime
 from typing import Dict, Any, List, Optional, Tuple
 from uuid import uuid4
@@ -18,7 +20,7 @@ from .agents.scorer import scoring_agent
 # Stage 2 Imports
 from .models.interview import (
     InterviewState, ConversationTurn, InterviewPhase,
-    QuestionBank, DebriefReport, StakeholderType, StakeholderReport, StakeholderDecision
+    QuestionBank, DebriefReport, StakeholderType, StakeholderReport
 )
 from .agents.question_generator import get_question_generator
 from .agents.interviewer import get_interviewer_agent
@@ -567,6 +569,29 @@ class InterviewOrchestrator:
             msg = str(error).lower()
             return '429' in msg or 'rate limit' in msg or 'too many requests' in msg
 
+        def _extract_retry_seconds(error: Exception) -> int:
+            """
+            Parse suggested retry seconds from provider/client error text when available.
+            Falls back to a conservative 15-second wait.
+            """
+            msg = str(error)
+
+            patterns = [
+                r'in\s+(\d+)\s+seconds',
+                r'retry after\s+(\d+)',
+                r'wait\s+(\d+)\s*s',
+            ]
+
+            for pattern in patterns:
+                match = re.search(pattern, msg, flags=re.IGNORECASE)
+                if match:
+                    try:
+                        return max(5, min(120, int(match.group(1))))
+                    except Exception:
+                        continue
+
+            return 15
+
         try:
             logger.info(f"Starting Stage 3 stakeholder decision for session {session_id}")
 
@@ -600,53 +625,26 @@ class InterviewOrchestrator:
             logger.info(f"Generating {len(stakeholder_types)} individual stakeholder decisions...")
 
             for stakeholder_type in stakeholder_types:
-                try:
-                    decision = await self.stakeholder_agent.generate_stakeholder_decision(
-                        stakeholder_type,
-                        debrief_report,
-                        interview_state.candidate_profile,
-                        interview_state.full_conversation_history,
-                        interview_state.target_company,
-                        interview_state.target_role
-                    )
-                except Exception as e:
-                    if not _is_rate_limit_error(e):
-                        raise
+                while True:
+                    try:
+                        decision = await self.stakeholder_agent.generate_stakeholder_decision(
+                            stakeholder_type,
+                            debrief_report,
+                            interview_state.candidate_profile,
+                            interview_state.full_conversation_history,
+                            interview_state.target_company,
+                            interview_state.target_role
+                        )
+                        break
+                    except Exception as e:
+                        if not _is_rate_limit_error(e):
+                            raise
 
-                    logger.warning(
-                        f"{stakeholder_type.value} decision hit rate limit, using deterministic fallback: {str(e)}"
-                    )
-
-                    strengths = [
-                        "Strong fit signals from interview interactions",
-                        "Demonstrated relevant technical foundation",
-                        "Shows potential for role growth"
-                    ]
-                    concerns = [
-                        "Decision generated under API rate-limit fallback",
-                        "Recommend follow-up round for higher confidence"
-                    ]
-
-                    final_assessment = getattr(debrief_report, 'final_assessment', None) or {}
-                    if isinstance(final_assessment, dict):
-                        fallback_strengths = final_assessment.get('strengths')
-                        fallback_concerns = final_assessment.get('areas_for_improvement')
-                        if isinstance(fallback_strengths, list) and fallback_strengths:
-                            strengths = [str(item) for item in fallback_strengths[:3]]
-                        if isinstance(fallback_concerns, list) and fallback_concerns:
-                            concerns = [str(item) for item in fallback_concerns[:3]]
-
-                    decision = StakeholderDecision(
-                        stakeholder_type=stakeholder_type,
-                        decision='borderline',
-                        confidence_score=55,
-                        reasoning=(
-                            "Fallback decision produced because stakeholder model requests were rate-limited. "
-                            "This conservative decision should be revisited when model capacity is available."
-                        ),
-                        key_strengths=strengths,
-                        key_concerns=concerns
-                    )
+                        wait_seconds = _extract_retry_seconds(e)
+                        logger.warning(
+                            f"{stakeholder_type.value} decision rate-limited; waiting {wait_seconds}s before retry..."
+                        )
+                        await asyncio.sleep(wait_seconds)
 
                 individual_decisions.append(decision)
                 logger.info(f"{stakeholder_type.value} decision: {decision.decision}")

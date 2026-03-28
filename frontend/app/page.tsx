@@ -59,18 +59,11 @@ export default function HomePage() {
         onClose={() => setErrorMessage('')}
       />
 
-      <header className="border-b border-ink-primary bg-ink-primary px-6 py-3 text-accent-white">
-        <div className="mx-auto flex w-full max-w-[1400px] items-center justify-between">
-          <p className="text-4xl italic leading-none">INSPIRA</p>
-          <p className="ui-label text-xs">Beyond the resume. Beyond the interview.</p>
-        </div>
-      </header>
-
-      <main className="mx-auto grid min-h-[calc(100vh-58px)] w-full max-w-[1400px] grid-cols-5">
+      <main className="mx-auto grid min-h-screen w-full max-w-[1400px] grid-cols-5">
         <section className="col-span-3 border-r border-border-light p-6">
           <h1 className="display-tight text-6xl">Discover talent the resume never reveals.</h1>
           <p className="mt-3 text-xl" style={{ color: 'var(--ink-secondary)' }}>
-            INSPIRA reads resumes like editors read manuscripts: line by line, signal by signal. It pairs GitHub forensics with
+            This platform reads resumes like editors read manuscripts: line by line, signal by signal. It pairs GitHub forensics with
             adaptive interview design to expose depth, originality, and communication under pressure.
           </p>
           <div className="rule-thin my-5" />

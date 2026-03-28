@@ -88,11 +88,18 @@ INTERVIEW PARAMETERS:
   - Behavioral: {flavor['behavioral_percentage']}%
   - Resume Deep Dive: {flavor['resume_percentage']}%
 
-Generate exactly 20 questions following this distribution. Ensure questions are:
+Generate exactly 12 questions following this distribution. Ensure questions are:
 1. Appropriate for the seniority level
 2. Tailored to the candidate's background and technologies mentioned in their profile
 3. Realistic for the target company and role
 4. Well-distributed across difficulty levels within each category
+5. Short and demo-friendly
+
+FORMAT CONSTRAINTS (MANDATORY):
+- question_text: one sentence, max 16 words
+- talking_points: max 3 items, each max 6 words
+- follow_up_questions: max 2 items, each max 12 words
+- Avoid long setup paragraphs, constraints blocks, and multi-part prompts
 
 Return ONLY a valid JSON object with no additional text."""
 
@@ -161,6 +168,36 @@ Return ONLY a valid JSON object with no additional text."""
             "hard": QuestionDifficulty.HARD,
         }
         return mapping.get(raw, QuestionDifficulty.MEDIUM)
+
+    def _shorten_text(self, text: Any, max_words: int = 16) -> str:
+        """Trim generated text to concise interview-friendly phrasing."""
+        value = str(text or "").strip()
+        if not value:
+            return ""
+
+        parts = re.split(r'[\n\r]+|(?<=[.!?])\s+', value)
+        first = parts[0].strip() if parts else value
+        words = first.split()
+
+        if len(words) <= max_words:
+            return first
+
+        shortened = " ".join(words[:max_words]).rstrip(',;:')
+        if not shortened.endswith('?'):
+            shortened += '?'
+        return shortened
+
+    def _sanitize_short_list(self, values: Any, max_items: int, max_words_per_item: int) -> List[str]:
+        """Bound list size and item length for compact output."""
+        if not isinstance(values, list):
+            return []
+
+        out: List[str] = []
+        for raw in values[:max_items]:
+            text = self._shorten_text(raw, max_words=max_words_per_item)
+            if text:
+                out.append(text)
+        return out
 
     def _fallback_question_bank(self, seniority_level: str) -> QuestionBank:
         """Deterministic fallback question bank if LLM JSON is invalid."""
@@ -299,11 +336,11 @@ Return ONLY a valid JSON object with no additional text."""
             for q_data in response_json.get("questions", []):
                 try:
                     question = Question(
-                        question_text=str(q_data.get("question_text", "")).strip(),
+                        question_text=self._shorten_text(q_data.get("question_text", ""), max_words=16),
                         category=self._normalize_category(q_data.get("category")),
                         difficulty=self._normalize_difficulty(q_data.get("difficulty")),
-                        talking_points=q_data.get("talking_points", []),
-                        follow_up_questions=q_data.get("follow_up_questions", [])
+                        talking_points=self._sanitize_short_list(q_data.get("talking_points", []), max_items=3, max_words_per_item=6),
+                        follow_up_questions=self._sanitize_short_list(q_data.get("follow_up_questions", []), max_items=2, max_words_per_item=12)
                     )
 
                     if not question.question_text:

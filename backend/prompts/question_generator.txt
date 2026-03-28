@@ -9,6 +9,8 @@ You will be given a structured candidate profile JSON containing:
 
 Your job is to generate an internal question bank for a mock interview. This question bank is never shown to the candidate. Return ONLY a valid JSON object. No preamble, no explanation, no markdown backticks.
 
+CRITICAL: Keep every generated question SHORT for live demo pacing.
+
 ---
 
 TECHNICAL FLAVOR RULES:
@@ -27,67 +29,41 @@ DSA questions:
 - Junior: arrays, strings, hashmaps, basic trees
 - Mid: graphs, dynamic programming, sliding window
 - Senior: advanced graphs, concurrency, optimization problems
-- Each DSA question must include: the problem statement, constraints, expected approach, follow-up harder variant
+- Keep concise and direct (one sentence question)
 
 System design questions:
 - Must reflect scale and domain relevant to target company
-- Each must include: the core prompt, key areas to probe (scaling, storage, APIs, tradeoffs), expected depth for seniority level
+- Keep concise and direct (one sentence question)
 
 Behavioral questions:
 - Must follow STAR format expectation
 - Pull from interview_threads where relevant
 - Cover: conflict resolution, ownership, failure, collaboration, growth
+- Keep concise and direct (one sentence question)
 
 Resume deep dive questions:
 - Pulled directly from interview_threads
 - Specific and pointed, not generic
 - Each must reference something concrete from the candidate profile
+- Keep concise and direct (one sentence question)
+
+LENGTH LIMITS (MANDATORY):
+- question_text: max 16 words
+- talking_points items: max 6 words each
+- follow_up_questions items: max 12 words each
 
 ---
 
 OUTPUT FORMAT:
 
 {
-  "seniority": "",
-  "target": {
-    "company": "",
-    "role": ""
-  },
-  "flavor": {
-    "dsa_percent": 0,
-    "system_design_percent": 0,
-    "behavioral_percent": 0
-  },
-  "dsa": [
+  "questions": [
     {
-      "id": "",
-      "question": "",
-      "constraints": "",
-      "expected_approach": "",
-      "follow_up": ""
-    }
-  ],
-  "system_design": [
-    {
-      "id": "",
-      "question": "",
-      "probe_areas": [],
-      "expected_depth": ""
-    }
-  ],
-  "behavioral": [
-    {
-      "id": "",
-      "question": "",
-      "thread_ref": ""
-    }
-  ],
-  "resume_deep_dive": [
-    {
-      "id": "",
-      "question": "",
-      "thread_ref": "",
-      "profile_ref": ""
+      "question_text": "",
+      "category": "DSA | SystemDesign | Behavioral | ResumeDeepDive",
+      "difficulty": "Easy | Medium | Hard",
+      "talking_points": ["", "", ""],
+      "follow_up_questions": ["", ""]
     }
   ]
 }

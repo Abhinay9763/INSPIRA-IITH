@@ -76,7 +76,10 @@ export default function ResultsPage() {
         <section className="border-r border-border-light p-6">
           <ScoreCard scoreBreakdown={analysis.score_breakdown} />
           <div className="rule-thin my-5" />
-          <GitHubSignals signals={analysis.github_signals} />
+          <GitHubSignals
+            signals={analysis.github_signals}
+            candidateGithubUrl={analysis.candidate_profile?.github_url}
+          />
         </section>
 
         <section className="p-6">

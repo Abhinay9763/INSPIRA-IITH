@@ -1,0 +1,168 @@
+<svg width="100%" viewBox="0 0 900 1100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="1100" fill="#0A0A0A"/>
+
+  <!-- Top rule -->
+  <line x1="40" y1="40" x2="860" y2="40" stroke="#F0EBE0" stroke-width="1.5"/>
+
+  <!-- Title -->
+  <text font-family="'Times New Roman', Georgia, serif" font-size="28" font-weight="700" x="450" y="76" text-anchor="middle" fill="#F0EBE0">Multi-Agent Orchestration</text>
+  <text font-family="'Courier New', monospace" font-size="11" letter-spacing="3" x="450" y="96" text-anchor="middle" fill="#555555">INSPIRA — HIRING INTELLIGENCE SYSTEM</text>
+
+  <!-- Rule below title -->
+  <line x1="40" y1="110" x2="860" y2="110" stroke="#F0EBE0" stroke-width="0.5"/>
+
+  <!-- ORCHESTRATOR -->
+  <rect x="300" y="128" width="300" height="48" rx="0" fill="#F0EBE0"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="3" x="450" y="148" text-anchor="middle" fill="#555555">ORCHESTRATOR</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="13" x="450" y="166" text-anchor="middle" fill="#0A0A0A">Routes all stages and state</text>
+
+  <!-- Arrow down -->
+  <line x1="450" y1="176" x2="450" y2="208" stroke="#F0EBE0" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- STAGE 1 LABEL -->
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="3" x="40" y="222" fill="#555555">01 / TALENT DISCOVERY</text>
+  <line x1="40" y1="228" x2="860" y2="228" stroke="#333333" stroke-width="0.5"/>
+
+  <!-- STAGE 1 CONTAINER -->
+  <rect x="40" y="238" width="820" height="196" rx="0" fill="none" stroke="#333333" stroke-width="0.5" stroke-dasharray="6 4"/>
+
+  <!-- Resume Analyst -->
+  <rect x="64" y="262" width="220" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="174" y="281" text-anchor="middle" fill="#555555">AGENT 01</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="174" y="300" text-anchor="middle" fill="#F0EBE0">Resume Analyst</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="174" y="316" text-anchor="middle" fill="#888888">Extract structured profile</text>
+
+  <!-- GitHub Scout -->
+  <rect x="340" y="262" width="220" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="450" y="281" text-anchor="middle" fill="#555555">AGENT 02</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="450" y="300" text-anchor="middle" fill="#F0EBE0">Github Scout</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="450" y="316" text-anchor="middle" fill="#888888">Repos, READMEs, activity</text>
+
+  <!-- README Scorer -->
+  <rect x="616" y="262" width="220" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="726" y="281" text-anchor="middle" fill="#555555">AGENT 03</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="726" y="300" text-anchor="middle" fill="#F0EBE0">README Scorer</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="726" y="316" text-anchor="middle" fill="#888888">Quality + originality</text>
+
+  <!-- Arrows from agents down -->
+  <line x1="174" y1="326" x2="174" y2="366" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="450" y1="326" x2="450" y2="366" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="726" y1="326" x2="726" y2="366" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Horizontal convergence -->
+  <line x1="174" y1="392" x2="295" y2="392" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="726" y1="392" x2="609" y2="392" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Scoring Agent -->
+  <rect x="295" y="366" width="314" height="54" rx="0" fill="#F0EBE0"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="452" y="384" text-anchor="middle" fill="#888888">AGENT 04</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="452" y="403" text-anchor="middle" fill="#0A0A0A">Scoring Agent</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="452" y="416" text-anchor="middle" fill="#555555">Rubric · signals · interview threads</text>
+
+  <!-- Arrow Stage 1 to Stage 2 -->
+  <line x1="450" y1="434" x2="450" y2="468" stroke="#F0EBE0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="1" x="462" y="454" fill="#555555">candidate profile JSON</text>
+
+  <!-- STAGE 2 LABEL -->
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="3" x="40" y="482" fill="#555555">02 / ADAPTIVE INTERVIEW</text>
+  <line x1="40" y1="488" x2="860" y2="488" stroke="#333333" stroke-width="0.5"/>
+
+  <!-- STAGE 2 CONTAINER -->
+  <rect x="40" y="498" width="820" height="196" rx="0" fill="none" stroke="#333333" stroke-width="0.5" stroke-dasharray="6 4"/>
+
+  <!-- Question Generator -->
+  <rect x="64" y="522" width="220" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="174" y="541" text-anchor="middle" fill="#555555">AGENT 05</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="174" y="560" text-anchor="middle" fill="#F0EBE0">Question Generator</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="174" y="576" text-anchor="middle" fill="#888888">Internal question bank</text>
+
+  <line x1="284" y1="554" x2="335" y2="554" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Interviewer Agent -->
+  <rect x="335" y="522" width="230" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="450" y="541" text-anchor="middle" fill="#555555">AGENT 06</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="450" y="560" text-anchor="middle" fill="#F0EBE0">Interviewer Agent</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="450" y="576" text-anchor="middle" fill="#888888">Voice · adaptive turns</text>
+
+  <line x1="565" y1="554" x2="616" y2="554" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Debrief Agent -->
+  <rect x="616" y="522" width="220" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="726" y="541" text-anchor="middle" fill="#555555">AGENT 07</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="726" y="560" text-anchor="middle" fill="#F0EBE0">Debrief Agent</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="726" y="576" text-anchor="middle" fill="#888888">Real vs resume report</text>
+
+  <!-- Voice loop note -->
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="1" x="450" y="628" text-anchor="middle" fill="#555555">TTS  →  CANDIDATE SPEAKS  →  WEB SPEECH API  →  TURN LOOP</text>
+  <line x1="200" y1="634" x2="700" y2="634" stroke="#333333" stroke-width="0.5"/>
+
+  <!-- Arrow Stage 2 to Stage 3 -->
+  <line x1="450" y1="694" x2="450" y2="728" stroke="#F0EBE0" stroke-width="1" marker-end="url(#arrow)"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="1" x="462" y="714" fill="#555555">transcript + profile</text>
+
+  <!-- STAGE 3 LABEL -->
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="3" x="40" y="742" fill="#555555">03 / MULTI-STAKEHOLDER SIMULATION</text>
+  <line x1="40" y1="748" x2="860" y2="748" stroke="#333333" stroke-width="0.5"/>
+
+  <!-- STAGE 3 CONTAINER -->
+  <rect x="40" y="758" width="820" height="240" rx="0" fill="none" stroke="#333333" stroke-width="0.5" stroke-dasharray="6 4"/>
+
+  <!-- HR Agent -->
+  <rect x="64" y="778" width="172" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="150" y="797" text-anchor="middle" fill="#555555">AGENT 08</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="150" y="816" text-anchor="middle" fill="#F0EBE0">HR Agent</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="150" y="832" text-anchor="middle" fill="#888888">Culture fit</text>
+
+  <!-- Hiring Manager -->
+  <rect x="252" y="778" width="172" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="338" y="797" text-anchor="middle" fill="#555555">AGENT 09</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="338" y="816" text-anchor="middle" fill="#F0EBE0">Hiring Manager</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="338" y="832" text-anchor="middle" fill="#888888">Delivery focus</text>
+
+  <!-- Tech Lead -->
+  <rect x="440" y="778" width="172" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="526" y="797" text-anchor="middle" fill="#555555">AGENT 10</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="526" y="816" text-anchor="middle" fill="#F0EBE0">Tech Lead</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="526" y="832" text-anchor="middle" fill="#888888">Technical depth</text>
+
+  <!-- Peer Engineer -->
+  <rect x="628" y="778" width="172" height="64" rx="0" fill="#141414" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="714" y="797" text-anchor="middle" fill="#555555">AGENT 11</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="714" y="816" text-anchor="middle" fill="#F0EBE0">Peer Engineer</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="714" y="832" text-anchor="middle" fill="#888888">Collaboration signal</text>
+
+  <!-- Arrows down from stakeholders -->
+  <line x1="150" y1="842" x2="150" y2="888" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="338" y1="842" x2="338" y2="888" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="526" y1="842" x2="526" y2="888" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="714" y1="842" x2="714" y2="888" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Horizontal convergence -->
+  <line x1="150" y1="914" x2="290" y2="914" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+  <line x1="714" y1="914" x2="614" y2="914" stroke="#F0EBE0" stroke-width="0.8" marker-end="url(#arrow)"/>
+
+  <!-- Stakeholder Synthesis -->
+  <rect x="290" y="888" width="324" height="54" rx="0" fill="#F0EBE0"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="452" y="906" text-anchor="middle" fill="#888888">AGENT 12</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="15" font-weight="700" x="452" y="925" text-anchor="middle" fill="#0A0A0A">Stakeholder Synthesis</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="12" font-style="italic" x="452" y="938" text-anchor="middle" fill="#555555">Resolve conflicts · final verdict</text>
+
+  <!-- Arrow to final output -->
+  <line x1="450" y1="942" x2="450" y2="976" stroke="#F0EBE0" stroke-width="1" marker-end="url(#arrow)"/>
+
+  <!-- Final Output -->
+  <rect x="250" y="976" width="400" height="48" rx="0" fill="none" stroke="#F0EBE0" stroke-width="1.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="3" x="450" y="996" text-anchor="middle" fill="#555555">OUTPUT</text>
+  <text font-family="'Times New Roman', Georgia, serif" font-size="16" font-weight="700" x="450" y="1014" text-anchor="middle" fill="#F0EBE0">Hiring Decision Report</text>
+
+  <!-- Bottom rule -->
+  <line x1="40" y1="1060" x2="860" y2="1060" stroke="#F0EBE0" stroke-width="0.5"/>
+  <text font-family="'Courier New', monospace" font-size="10" letter-spacing="2" x="450" y="1078" text-anchor="middle" fill="#555555">INSPIRA · IITH HACKATHON · 2025</text>
+</svg>

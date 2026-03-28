@@ -58,7 +58,7 @@ PHASE_TURN_THRESHOLDS = {
 }
 
 # Text-to-Speech Configuration
-TTS_VOICE = "en-US-GuyNeural"  # Default voice for edge-tts
+TTS_VOICE = "en-US-SteffanNeural"  # Default voice for edge-tts
 
 # Interview Flavor Configuration based on candidate seniority
 INTERVIEW_FLAVORS = {

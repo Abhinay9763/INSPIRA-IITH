@@ -1,7 +1,8 @@
 import { GitHubSignals, Repository } from '../lib/types'
 
 interface GitHubSignalsProps {
-  signals: GitHubSignals
+  signals?: GitHubSignals | null
+  candidateGithubUrl?: string | null
 }
 
 function originalityStyle(originality: Repository['originality']): { color: string; label: string } {
@@ -29,34 +30,43 @@ function StatCell({ label, value, withDivider }: { label: string; value: number;
   )
 }
 
-export default function GitHubSignalsSection({ signals }: GitHubSignalsProps) {
-  const hasGithub = Boolean(signals?.username)
+export default function GitHubSignalsSection({ signals, candidateGithubUrl }: GitHubSignalsProps) {
+  const hasGithubAnalysis = Boolean(signals?.username)
+  const hasGithubOnResume = Boolean(candidateGithubUrl && String(candidateGithubUrl).trim())
+  const resolvedSignals = signals || null
 
   return (
     <section>
       <p className="section-label mb-3">GITHUB ANALYSIS</p>
 
-      {!hasGithub ? (
+      {!hasGithubAnalysis ? (
         <div>
           <p className="italic" style={{ color: 'var(--ink-muted)' }}>
-            NO GITHUB PROFILE DETECTED
+            {hasGithubOnResume ? 'GITHUB ANALYSIS UNAVAILABLE' : 'NO GITHUB PROFILE DETECTED'}
           </p>
           <p className="ui-label mt-2 text-xs" style={{ color: 'var(--ink-secondary)' }}>
-            GitHub activity score may be lower due to missing profile context.
+            {hasGithubOnResume
+              ? 'A GitHub URL was found in the resume, but repository signals could not be fetched for this run.'
+              : 'GitHub activity score may be lower due to missing profile context.'}
           </p>
+          {hasGithubOnResume ? (
+            <a className="section-label mt-2 inline-block hover:underline" href={candidateGithubUrl || '#'} rel="noreferrer" target="_blank">
+              [OPEN PROFILE]
+            </a>
+          ) : null}
         </div>
       ) : (
         <>
           <div className="grid grid-cols-3 gap-3 pb-3">
-            <StatCell label="REPOS" value={signals.public_repos} withDivider />
-            <StatCell label="FOLLOWERS" value={signals.followers} withDivider />
-            <StatCell label="STARS" value={signals.total_stars} withDivider={false} />
+            <StatCell label="REPOS" value={resolvedSignals?.public_repos || 0} withDivider />
+            <StatCell label="FOLLOWERS" value={resolvedSignals?.followers || 0} withDivider />
+            <StatCell label="STARS" value={resolvedSignals?.total_stars || 0} withDivider={false} />
           </div>
 
           <div className="rule-thin" />
 
           <div className="space-y-3 pt-3">
-            {(signals.repositories || []).slice(0, 5).map((repo) => {
+            {(resolvedSignals?.repositories || []).slice(0, 5).map((repo) => {
               const orig = originalityStyle(repo.originality)
               return (
                 <div key={repo.url || repo.name} className="pb-2">
